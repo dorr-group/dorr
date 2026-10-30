@@ -17,6 +17,7 @@ import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { mergeGeometries, mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
 import { Reflector } from 'three/addons/objects/Reflector.js';
+import { Sound } from './sound.js?v=20261030b';
 
 const root = document.documentElement;
 const $ = (s, c = document) => c.querySelector(s);
@@ -71,6 +72,32 @@ form.addEventListener('submit', (e) => {
   note.textContent = `Opening your email app with this message. If nothing opens, write to ${to}.`;
   location.href = `mailto:${to}?subject=${encodeURIComponent('Enquiry — DORR')}&body=${encodeURIComponent(body)}`;
 });
+
+/* ------------------------------------------------------------------ sound: choice + toggle */
+const soundBtn = $('[data-sound-toggle]'), soundLabel = $('[data-sound-label]');
+const paintSound = (on) => { soundBtn.setAttribute('aria-pressed', on ? 'true' : 'false'); soundLabel.textContent = on ? 'Sound on' : 'Sound off'; soundBtn.setAttribute('aria-label', on ? 'Turn sound off' : 'Turn sound on'); };
+Sound.onChange(paintSound);
+paintSound(false);
+soundBtn.addEventListener('click', () => Sound.setEnabled(!Sound.enabled));
+document.addEventListener('visibilitychange', () => Sound.setHidden(document.hidden));
+// the loader ends with a choice; that click is the gesture that unlocks audio
+function askSound() {
+  return new Promise((resolve) => {
+    const boot = $('[data-boot]'), box = $('[data-choice]');
+    if (!boot || !box) { resolve(); return; }
+    boot.classList.add('is-asking');
+    boot.removeAttribute('aria-hidden');
+    boot.setAttribute('role', 'dialog');
+    boot.setAttribute('aria-label', 'Sound');
+    box.hidden = false;
+    const on = $('[data-sound-on]', box), off = $('[data-sound-off]', box);
+    if (window.gsap && !reduce) gsap.fromTo(box.children, { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.7, stagger: 0.1, ease: 'power2.out' });
+    (Sound.remembered() === 'off' ? off : on).focus({ preventScroll: true });
+    const done = (val) => { Sound.setEnabled(val); boot.classList.remove('is-asking'); box.hidden = true; resolve(val); };
+    on.addEventListener('click', () => done(true), { once: true });
+    off.addEventListener('click', () => done(false), { once: true });
+  });
+}
 
 /* typed reveal with a caret: the HUD's way of writing */
 function scramble(el, text, dur = 0.6) {
@@ -141,6 +168,8 @@ function openSheet(kind, i = 0) {
     gsap.fromTo(panel.children, { y: 14, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.7, stagger: 0.05, ease: 'power2.out', delay: 0.4 });
   }
   scramble($('.sheet__name', el), kind === 'brand' ? BRANDS[i].name : 'DORR', 0.9);
+  Sound.open();
+  Sound.duck(true);
   $('[data-close]', el).focus({ preventScroll: true });
   if (SH.hooks.open) SH.hooks.open(kind, i);
 }
@@ -156,18 +185,21 @@ function closeSheet(instant) {
     gsap.killTweensOf(panel);
     gsap.to(panel, { autoAlpha: 0, x: innerWidth < 760 ? 0 : 40, y: innerWidth < 760 ? 40 : 0, duration: 0.5, ease: 'power2.in', onComplete: () => { el.hidden = true; gsap.set(panel, { x: 0, y: 0 }); } });
   }
+  if (instant !== true) Sound.close();
+  Sound.duck(false);
   if (SH.hooks.close) SH.hooks.close(kind);
   if (SH.last && SH.last.focus && instant !== true) SH.last.focus({ preventScroll: true });
 }
 function setBrand(i) {
   SH.idx = (i + 5) % 5;
   fillBrand(SH.idx, true);
+  Sound.pearl(SH.idx);
   const panel = $('.sheet__panel', sheetEls.brand);
   if (anim()) gsap.fromTo($$('.sheet__type, .sheet__fig, .sheet__body', panel), { autoAlpha: 0, y: 10 }, { autoAlpha: 1, y: 0, duration: 0.6, stagger: 0.06, ease: 'power2.out' });
   if (SH.hooks.brand) SH.hooks.brand(SH.idx);
 }
-brandLis.forEach((li, i) => li.querySelector('button').addEventListener('click', () => openSheet('brand', i)));
-$('[data-open-dorr]').addEventListener('click', () => openSheet('dorr'));
+brandLis.forEach((li, i) => li.querySelector('button').addEventListener('click', () => { Sound.pearl(i); openSheet('brand', i); }));
+$('[data-open-dorr]').addEventListener('click', () => { Sound.pearl(-1); openSheet('dorr'); });
 $$('[data-close]').forEach((b) => b.addEventListener('click', () => closeSheet()));
 $('[data-prev]').addEventListener('click', () => setBrand(SH.idx - 1));
 $('[data-next]').addEventListener('click', () => setBrand(SH.idx + 1));
@@ -191,7 +223,7 @@ window.addEventListener('keydown', (e) => {
 
 const goStatic = () => {
   root.classList.add('static');
-  $('[data-boot]')?.remove();
+  askSound().then(() => $('[data-boot]')?.remove());
 };
 
 /* ------------------------------------------------------------------ GLSL bits */
@@ -1158,9 +1190,9 @@ async function main() {
     if (SH.kind || root.classList.contains('static')) return;
     if (e.target.closest('a, button, input, textarea, label, .sheet, .dossier, .hud')) return;
     const h = pick((e.clientX / W) * 2 - 1, -(e.clientY / H) * 2 + 1);
-    if (h === 'pearl') openSheet('dorr');
+    if (h === 'pearl') { Sound.pearl(-1); openSheet('dorr'); }
     else if (h === 'shell') scrollToP(0.29, 2.4);
-    else if (typeof h === 'number') openSheet('brand', h);
+    else if (typeof h === 'number') { Sound.pearl(h); openSheet('brand', h); }
   });
 
   /* ============================================================ scroll */
@@ -1332,6 +1364,8 @@ async function main() {
     // ---------------------------------------------------- A · the shell in the water
     if (stage === 'A') {
       const open = Math.max(inOut(seg(p, 0.13, 0.255)), F.open);
+      if (open > 0.06 && !S.swell) { S.swell = true; Sound.shell(); }
+      else if (open < 0.02) S.swell = false;
       openAmt = open;
       topValve.rotation.x = -open * 1.02 - Math.sin(time * 0.8) * 0.006 * open;
       shell.position.y = SHELL_Y + Math.sin(time * 0.55) * 0.015;
@@ -1465,7 +1499,9 @@ async function main() {
     // hover (mouse only)
     if (ptr.moved && !SH.kind) {
       ptr.moved = false;
+      const was = hover;
       hover = coarse ? null : pick(ptr.x, ptr.y);
+      if (hover !== was && hover !== null && hover !== 'shell') Sound.tick();
       root.classList.toggle('is-pointer', hover !== null);
     }
 
@@ -1542,8 +1578,9 @@ async function main() {
   camera.position.copy(camPos); camera.lookAt(camLook);
   try { renderer.compile(scene, camera); } catch (e) { /* compile is a warm-up only */ }
   frame();
+  await new Promise((r) => gsap.to(v, { n: 100, duration: 1.2, ease: 'power2.inOut', onUpdate: paint, onComplete: r }));
+  await askSound();
   gsap.timeline()
-    .to(v, { n: 100, duration: 1.2, ease: 'power2.inOut', onUpdate: paint })
     .to('[data-boot]', { autoAlpha: 0, duration: 0.9, ease: 'power2.out' })
     .add(() => { $('[data-boot]')?.remove(); if (lenis) lenis.start(); ScrollTrigger.refresh(); }, '-=0.5')
     .to(S, { intro: 1, duration: 2.8, ease: 'power2.inOut' }, '-=0.7')

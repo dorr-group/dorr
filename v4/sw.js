@@ -1,12 +1,13 @@
 /* DORR v4 service worker — offline after the first visit */
-const CACHE = 'dorr-v4-3';
+const CACHE = 'dorr-v4-4';
 const CORE = [
   './',
   'index.html',
   'manifest.webmanifest',
-  'css/fonts.css?v=20261030',
-  'css/style.css?v=20261030',
-  'js/main.js?v=20261030',
+  'css/fonts.css?v=20261030b',
+  'css/style.css?v=20261030b',
+  'js/main.js?v=20261030b',
+  'js/sound.js?v=20261030b',
   'img/dada.webp',
   'icons/icon-192.png',
   'icons/icon-512.png',
@@ -49,6 +50,8 @@ self.addEventListener('fetch', (event) => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
+  // never intercept audio / media or ranged requests: let the browser stream them
+  if (req.headers.has('range') || req.destination === 'audio' || req.destination === 'video' || /\.(mp3|m4a|aac|ogg|oga|wav|webm|mp4)$/i.test(url.pathname)) return;
 
   if (req.mode === 'navigate') {
     event.respondWith(

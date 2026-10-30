@@ -1,0 +1,11 @@
+dorr-ambient.mp3
+----------------
+Music: "Rest Now" by Eugenio Mininni
+Source: Mixkit, https://mixkit.co/free-stock-music/ (track file https://assets.mixkit.co/music/584/584.mp3)
+Licence: Mixkit Stock Music Free License, https://mixkit.co/license/#musicFree
+Edit: an 86-second excerpt (from 1:22) turned into a seamless loop with an 8-second
+equal-power crossfade, level-matched to about -20 LUFS (true peak about -6 dBTP),
+encoded as MP3 128 kbps. No remix; no other material added.
+
+Sound effects: none are samples. Every chime, swell and tick on the site is synthesised
+live in the browser with the Web Audio API (js/sound.js).
