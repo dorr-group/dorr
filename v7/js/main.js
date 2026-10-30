@@ -89,6 +89,26 @@
     el._words = words;
     return words;
   }
+  function splitChars(el) {
+    if (el._chars) return el._chars;
+    const text = el.textContent;
+    const wrap = document.createElement('span');
+    wrap.setAttribute('aria-hidden', 'true');
+    tokens(el).forEach((t) => {
+      if (t.br) wrap.appendChild(document.createElement('br'));
+      else if (t.sp) wrap.appendChild(document.createTextNode(' '));
+      else {
+        const w = document.createElement('span'); w.className = 'sx-w';
+        Array.from(t.w).forEach((c) => { const cs = document.createElement('span'); cs.className = 'sx-c'; cs.textContent = c; w.appendChild(cs); });
+        wrap.appendChild(w);
+      }
+    });
+    el.textContent = '';
+    el.appendChild(wrap);
+    srCopy(el, text);
+    el._chars = $$('.sx-c', wrap);
+    return el._chars;
+  }
   function splitLines(el) {
     if (!el._orig) { el._orig = el.innerHTML; el._text = el.textContent; }
     el.innerHTML = el._orig;
@@ -127,6 +147,25 @@
 
   /* ---------- reveal vocabulary (transform + opacity only) ---------- */
   const R = {
+    // caps: characters turn in on the Y axis
+    h(els, mode, delay) {
+      els.forEach((el, i) => {
+        const c = splitChars(el);
+        if (mode === 'init') return gsap.set(c, { opacity: 0, yPercent: 50, rotateY: 90, transformPerspective: 800 });
+        if (mode === 'show') return gsap.fromTo(c, { opacity: 0, yPercent: 50, rotateY: 90, transformPerspective: 800 }, { opacity: 1, yPercent: 0, rotateY: 0, duration: D.l, delay: (delay ?? DELAY) + i * STAG, stagger: .04, ease: E.out, overwrite: true });
+        return gsap.to(c, { opacity: 0, yPercent: -50, rotateY: -90, duration: D.s, delay: delay ?? 0, stagger: .015, ease: E.in, overwrite: true });
+      });
+    },
+    // display word: characters fall in on the X axis
+    a(els, mode, delay) {
+      els.forEach((el, i) => {
+        const c = splitChars(el);
+        const r = rem();
+        if (mode === 'init') return gsap.set(c, { opacity: 0, rotateX: 90, x: 10 * r, transformOrigin: '50% 100%', transformPerspective: 600 });
+        if (mode === 'show') return gsap.fromTo(c, { opacity: 0, rotateX: 90, x: 10 * r, transformOrigin: '50% 100%', transformPerspective: 600 }, { opacity: 1, rotateX: 0, x: 0, duration: D.l, delay: (delay ?? DELAY) + i * STAG, stagger: STAG, ease: E.out, overwrite: true });
+        return gsap.to(c, { opacity: 0, rotateX: -90, x: -10 * r, transformOrigin: '50% 0%', duration: D.s, delay: delay ?? 0, stagger: STAG / 2, ease: E.in, overwrite: true });
+      });
+    },
     w(els, mode, delay) {
       els.forEach((el, i) => {
         const w = splitWords(el);
@@ -355,13 +394,11 @@
   function initHero(scope) {
     const hero = $('.hero', scope);
     if (!hero || !motion) return;
-    const big = $('.hero__oval', hero), sm = $('.hero__oval-sm', hero);
-    const n1 = $('.nacre--1', hero), n2 = $('.nacre--2', hero);
+    const photo = $('[data-hero-photo] img', hero), oval = $('.hero__oval', hero), ring = $('.hero__ring', hero);
     gsap.timeline({ scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom top', scrub: .4 } })
-      .to(big, { yPercent: 10, ease: 'none' }, 0)
-      .to(sm, { yPercent: -28, ease: 'none' }, 0)
-      .to(n1, { rotate: 4, ease: 'none' }, 0)
-      .to(n2, { rotate: -6, ease: 'none' }, 0);
+      .to(photo, { yPercent: 12, scale: 1.06, ease: 'none' }, 0)
+      .to(oval, { yPercent: -30, ease: 'none' }, 0)
+      .to(ring, { rotate: 4, yPercent: -20, ease: 'none' }, 0);
   }
 
   /* ---------- nacre layers (structure) ---------- */
@@ -402,16 +439,76 @@
       .to(brands, { opacity: 1, stagger: .025, duration: .1 }, .63);
   }
 
+  /* ---------- four reasons: oval photo changes with a veil ---------- */
+  function initTabs(scope) {
+    const box = $('[data-tabs]', scope);
+    if (!box) return;
+    const panels = $$('.panel', box);
+    const btns = $$('[role="tab"]', box);
+    const bar = $('.reasons__bar b', box);
+    let cur = 0, busy = false, timer = null, visible = false;
+    const runBar = () => { if (!hasGsap || reduce) return; gsap.killTweensOf(bar); gsap.fromTo(bar, { scaleX: 0 }, { scaleX: 1, duration: 6, ease: 'none' }); };
+    const go = (n, user) => {
+      if (n === cur || busy) return;
+      const a = panels[cur], b = panels[n];
+      btns.forEach((x, i) => { x.classList.toggle('is-active', i === n); x.setAttribute('aria-selected', String(i === n)); x.tabIndex = i === n ? 0 : -1; });
+      cur = n;
+      if (!motion) { a.classList.remove('is-active'); b.classList.add('is-active'); return; }
+      busy = true;
+      const ao = $('.panel__oval', a), bo = $('.panel__oval', b);
+      const at = $('.panel__text', a), bt = $('.panel__text', b);
+      b.classList.add('is-going');
+      gsap.set(b, { zIndex: 2 }); gsap.set(a, { zIndex: 1 });
+      gsap.fromTo(bo, { yPercent: 18, opacity: 0, scale: .92 }, { yPercent: 0, opacity: 1, scale: 1, duration: D.l, ease: E.out });
+      gsap.fromTo($('img', bo), { scale: 1.3 }, { scale: 1, duration: D.l * 1.4, ease: E.out });
+      gsap.to(ao, { yPercent: -10, opacity: 0, scale: .96, duration: D.m, ease: E.inout });
+      gsap.to(at, { opacity: 0, duration: D.s, ease: E.in });
+      gsap.fromTo(bt, { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: D.m, delay: .35, ease: E.out });
+      gsap.delayedCall(D.l, () => { a.classList.remove('is-active'); b.classList.remove('is-going'); b.classList.add('is-active'); gsap.set([ao, at], { clearProps: 'all' }); busy = false; });
+      if (user) restart();
+    };
+    const restart = () => {
+      clearInterval(timer);
+      if (reduce || !visible) return;
+      runBar();
+      timer = setInterval(() => { go((cur + 1) % panels.length); runBar(); }, 6000);
+    };
+    btns.forEach((b, i) => {
+      b.tabIndex = i === 0 ? 0 : -1;
+      b.addEventListener('click', () => go(i, true));
+      b.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+          e.preventDefault();
+          const n = (cur + (e.key === 'ArrowDown' || e.key === 'ArrowRight' ? 1 : -1) + btns.length) % btns.length;
+          go(n, true); btns[n].focus();
+        }
+      });
+    });
+    const io = new IntersectionObserver(([en]) => { visible = en.isIntersecting; if (visible) restart(); else clearInterval(timer); }, { threshold: .35 });
+    io.observe(box);
+    onClean(() => { io.disconnect(); clearInterval(timer); });
+    if (motion) {
+      const first = $('.panel__oval', panels[0]);
+      R.oval([first], 'init');
+      ST.create({ trigger: box, start: 'top 65%', once: true, onEnter: () => R.oval([first], 'show', 0) });
+    }
+  }
+
   /* ---------- parallax groups ---------- */
   function initParallax(scope) {
-    if (!motion || !isDesk()) return;
-    $$('.card[data-speed], .expertise__img[data-speed]', scope).forEach((el) => {
+    if (!motion) return;
+    $$('[data-parallax]', scope).forEach((img) => {
+      gsap.fromTo(img, { yPercent: -8 }, { yPercent: 8, ease: 'none', scrollTrigger: { trigger: img.parentElement.parentElement, start: 'top bottom', end: 'bottom top', scrub: .5 } });
+    });
+    $$('[data-flower]', scope).forEach((f) => {
+      gsap.fromTo(f, { y: -30 * rem() }, { y: 30 * rem(), ease: 'none', scrollTrigger: { trigger: f.parentElement, start: 'top bottom', end: 'bottom top', scrub: .5 } });
+    });
+    if (!isDesk()) return;
+    $$('.expertise__img[data-speed]', scope).forEach((el) => {
       const s = parseFloat(el.dataset.speed) || 0;
       if (!s) return;
       gsap.fromTo(el, { yPercent: s }, { yPercent: -s, ease: 'none', scrollTrigger: { trigger: el.parentElement, start: 'top bottom', end: 'bottom top', scrub: .5 } });
     });
-    const band = $('.ft__band img', scope);
-    if (band) gsap.fromTo(band, { yPercent: -12 }, { yPercent: 0, ease: 'none', scrollTrigger: { trigger: band.parentElement, start: 'top bottom', end: 'bottom top', scrub: .5 } });
   }
 
   /* ---------- brand index: an oval follows the cursor ---------- */
@@ -496,6 +593,7 @@
     const run = () => {
       initHero(main);
       initLayers(main);
+      initTabs(main);
       initParallax(main);
       initVision(main);
       initReveals(main);
@@ -527,37 +625,39 @@
     };
     if (!shell || !motion || getComputedStyle(shell).display === 'none') { finish(); if (motion) heroIntro(main, .1); return; }
     root.classList.add('is-loaded');
+    // slow start (fonts or network held us up): play the short version
+    if (performance.now() > 3000) root.classList.add('revisit');
     const revisit = root.classList.contains('revisit');
     const hero = $('.hero', main);
     if (hero) { play('data-part', hero, 'init'); gsap.set($$('.nacre', hero), { opacity: 0 }); }
     lock();
     scrollTo(0, { immediate: true });
-    const pearl = $('.shell__pearl', shell);
-    const rings = $$('.shell__ring', shell);
-    const word = $('.shell__word', shell);
+    const oval = $('.pw__oval', shell), img = $('.pw__oval img', shell);
+    const rings = $$('.pw__ring', shell);
+    const word = $$('.pw__word', shell);
+    const chrome = $$('.pw__label, .pw__foot', shell);
+    // how far the oval must grow to cover the screen
+    const b = oval.getBoundingClientRect();
+    const cover = Math.max(innerWidth / b.width, innerHeight / b.height) * 1.6;
     root.classList.add('shell-go');
     const tl = gsap.timeline({ onComplete: () => { unlock(); finish(); } });
     if (!revisit) {
-      tl.fromTo(pearl, { scale: 0 }, { scale: 1, duration: D.l, ease: E.out }, .1)
-        .fromTo(rings, { scale: .55, opacity: 0, xPercent: -50, yPercent: -50 }, { scale: 1, opacity: 1, duration: D.l * 1.2, stagger: .32, ease: E.out }, .35)
-        .fromTo(word, { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: D.l, ease: E.out }, .5)
-        .to([rings, word], { opacity: 0, duration: D.m, ease: E.in }, 2.25);
+      R.a(word, 'init');
+      tl.fromTo(oval, { scale: .2, opacity: 0 }, { scale: 1, opacity: 1, duration: D.l * 1.2, ease: E.out }, .1)
+        .fromTo(img, { scale: 1.6 }, { scale: 1.15, duration: D.l * 2, ease: E.out }, .1)
+        .fromTo(rings, { scale: .8, opacity: 0 }, { scale: 1, opacity: 1, duration: D.l, stagger: .2, ease: E.out }, .5)
+        .fromTo(chrome, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: D.l, ease: E.out }, .3)
+        .add(() => R.a(word, 'show', 0), .6)
+        .to(word, { opacity: 0, duration: D.m, ease: E.in }, 2.3)
+        .to([rings, chrome], { opacity: 0, duration: D.m, ease: E.in }, 2.3);
     } else {
-      tl.fromTo(pearl, { scale: 0 }, { scale: 1, duration: D.m, ease: E.out }, 0);
+      tl.fromTo(oval, { scale: .4, opacity: 0 }, { scale: 1, opacity: 1, duration: D.m, ease: E.out }, 0);
     }
-    // the pearl travels to the wordmark dot
-    const dot = $('.hd__pearl');
-    tl.add(() => {
-      if (!dot) return;
-      const a = pearl.getBoundingClientRect(), b = dot.getBoundingClientRect();
-      gsap.to(pearl, { x: b.left + b.width / 2 - (a.left + a.width / 2), y: b.top + b.height / 2 - (a.top + a.height / 2), scale: b.width / a.width, duration: 1.3, ease: E.inout });
-      gsap.fromTo(dot, { opacity: 0 }, { opacity: 1, duration: .2, delay: 1.25 });
-      gsap.to(pearl, { opacity: 0, duration: .2, delay: 1.3 });
-    }, revisit ? .5 : 2.5)
-      .to('.shell__seam', { opacity: 1, duration: .2 }, revisit ? .55 : 2.55)
-      .to('.shell__half--top', { yPercent: -102, duration: 1.4, ease: E.inout }, revisit ? .6 : 2.6)
-      .to('.shell__half--bottom', { yPercent: 102, duration: 1.4, ease: E.inout }, '<')
-      .add(() => heroIntro(main, .1), '<35%');
+    const t = revisit ? .7 : 2.6;
+    tl.to(oval, { scale: cover, duration: 1.5, ease: E.inout }, t)
+      .to(img, { scale: 1, duration: 1.5, ease: E.inout }, t)
+      .to(shell, { opacity: 0, duration: .7, ease: E.out }, t + 1.15)
+      .add(() => heroIntro(main, 0), t + .9);
   }
 
   /* decode lazy images during idle time so nothing decodes mid-scroll */
@@ -615,7 +715,7 @@
       const fetching = fetch(url.pathname, { credentials: 'same-origin' }).then((r) => { if (!r.ok) throw new Error(r.status); return r.text(); });
       if (menu.open) await closeMenu(true);
       if (motion) {
-        ['w', 'p'].forEach((k) => $$(`[data-reveal="${k}"], [data-part="${k}"]`, main).filter((el) => inView(el) && (el._words || el._lines)).forEach((el) => R[k]([el], 'hide', 0)));
+        ['w', 'p', 'h'].forEach((k) => $$(`[data-reveal="${k}"], [data-part="${k}"], [data-v="${k}"]`, main).filter((el) => inView(el) && (el._words || el._lines || el._chars)).forEach((el) => R[k]([el], 'hide', 0)));
         gsap.set(curtain, { visibility: 'visible', yPercent: 101 });
         await tween(curtain, { yPercent: 0, duration: D.l, ease: E.inout, delay: .1 });
       }
