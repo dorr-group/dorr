@@ -511,6 +511,9 @@
       new Promise(function (res) { if (heroImg.complete) res(); else { heroImg.addEventListener('load', res, { once: true }); heroImg.addEventListener('error', res, { once: true }); } })
     ]);
     var minDone = new Promise(function (res) { tl.eventCallback('onComplete', res); });
+    // never hold the page hostage: a slow hero image or a font that never settles (seen on iOS)
+    // must not keep the loader up, so readiness gives up after a few seconds
+    ready = Promise.race([ready, new Promise(function (res) { setTimeout(res, 4000); })]);
     Promise.all([ready, minDone]).then(function () {
       var mid = pearls[3];
       gsap.timeline()
@@ -526,13 +529,13 @@
 
   function boot() {
     setupStrands();
-    setupChrome();
     var index = setupIndex();
     setupNav(index);
     setupScroll();
     setupHero();
     setupNecklace();
     setupPearls();
+    setupChrome(); // after the pins, so band positions include pin spacing
     setupContact();
     setupFooter();
     intro();

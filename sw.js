@@ -1,7 +1,7 @@
 /* DORR v1 — offline cache. Core files are stored on first visit; everything
    else is cached as it is used, so later visits open fast even on a weak connection. */
 const PREFIX = 'dorr-v1-';
-const CACHE = PREFIX + '2';
+const CACHE = PREFIX + '3';
 const CORE = ["./", "index.html", "manifest.webmanifest", "assets/css/style.css", "assets/css/fonts.css", "assets/js/main.js", "assets/img/favicon.svg", "assets/img/events.jpg", "vendor/js/gsap.min.js", "vendor/js/ScrollTrigger.min.js", "vendor/js/lenis.min.js", "vendor/fonts/instrument-serif-latin-400-normal.woff2", "vendor/fonts/instrument-serif-latin-400-italic.woff2", "vendor/fonts/hanken-grotesk-latin-wght-normal.woff2"];
 
 self.addEventListener('install', (e) => {
@@ -22,6 +22,14 @@ self.addEventListener('fetch', (e) => {
       caches.open(CACHE).then((c) => c.put(req, copy));
       return res;
     }).catch(() => caches.match(req).then((hit) => hit || caches.match('./'))));
+    return;
+  }
+  if (req.destination === 'script' || req.destination === 'style') {
+    // code and styles: fresh when online, so a page never mixes new HTML with old scripts
+    e.respondWith(fetch(req).then((res) => {
+      if (res.ok) { const copy = res.clone(); caches.open(CACHE).then((c) => c.put(req, copy)); }
+      return res;
+    }).catch(() => caches.match(req)));
     return;
   }
   e.respondWith(caches.match(req).then((hit) => hit || fetch(req).then((res) => {

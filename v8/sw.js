@@ -1,5 +1,5 @@
 /* DORR v8 service worker: precache core, network-first navigation, cache-first static assets. */
-var VERSION = 'dorr-v8-2';
+var VERSION = 'dorr-v8-3';
 var CORE = [
   './',
   './index.html',
@@ -54,6 +54,14 @@ self.addEventListener('fetch', function (e) {
     }).catch(function () {
       return caches.match(req).then(function (r) { return r || caches.match('./index.html'); });
     }));
+    return;
+  }
+  if (req.destination === 'script' || req.destination === 'style') {
+    // code and styles: fresh when online, so a page never mixes new HTML with old scripts
+    e.respondWith(fetch(req).then(function (res) {
+      if (res && res.ok) { var copy = res.clone(); caches.open(VERSION).then(function (c) { c.put(req, copy); }); }
+      return res;
+    }).catch(function () { return caches.match(req); }));
     return;
   }
   e.respondWith(caches.match(req).then(function (hit) {
