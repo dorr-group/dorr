@@ -1,0 +1,410 @@
+<!doctype html>
+<!--
+  DORR — Version 8 · "Strand"  (دُر = pearl)
+  Idea: one thread, many pearls. The Holding is the clasp, the Services Company is the thread, the five brands are
+  the pearls. Every device on the page comes from that necklace. Studied for craft only (easing, timing, smoothness,
+  tactile paper) after the Awwwards Site of the Month Son Daven — none of its compositions or signatures are used.
+
+  ORIGINALITY CHECKLIST — Son Daven signature → what v8 does instead
+  01 Vertical loom-warp image shader (bars whose width follows darkness)
+     → "Pearl strand" shader (js/strand.js): pictures become rows of shaded pearls strung on sagging threads; pearl
+       size follows light, each bead has a highlight and a faint nacre sheen; beads string on along each strand and
+       swell and roll aside under the cursor.
+  02 Giant woven/fringed wordmark in loader and hero
+     → No woven lettering anywhere. "DORR" is set in Cormorant Light, an engraved plaque under the hero pearl.
+  03 Loader: dark field, threaded animal centred, corner notes, percent, giant woven name at the foot
+     → Pale pearl field; a single thread draws across the centre and seven pearls slide onto it as assets load;
+       the middle pearl then swells and becomes the hero's pearl window (no text corners, no percent).
+  04 Hero: full-bleed photo, woven title top-left, stat trio top-right, tagline bottom-left, round magnetic CTA,
+     inverted chips
+     → Symmetric composition on sea-ink: a centred circular "pearl" window holding a beaded photograph, the name
+       engraved beneath, two quiet captions left and right. Scrolling opens the pearl to full bleed and resolves the
+       beads into the photograph. No stats, no chips, no round button.
+  05 Cookie-style corner card → removed entirely.
+  06 Woven landscape rising after the hero with a small photo floating in it; threaded side-scenes around a quote
+     → Light panels slide over the dark hero with a curved shell lip; the idea is told as one sentence with small
+       round photographs set inline between the words.
+  07 Header: burger + MENU left, centred logo, language + pill right; hides on scroll
+     → Wordmark left, "Write to us" + "Index" right; a vertical pearl strand on the right edge marks the sections
+       (one bead per chapter, current bead lit) and doubles as navigation.
+  08 Section order (prologue / about / location / benefits rail / apartments / finance / FAQ)
+     → The pearl · One thread (idea + introduction) · The necklace (structure) · Five pearls (brands) ·
+       Vision · Write to the house.
+  09 "Dither" grid page transition → "Iris": a nacre circle opens from the point you clicked, the page moves,
+     the circle closes into a pearl at the centre.
+  10 Pinned rail of tilting cards → Brands as a list of names beside one sticky round viewer that re-strings
+     itself (beads unstring, swap, string again) as each name passes.
+  11 Double-rule cards, diamond-flanked labels, short double rules under headings
+     → Labels lead with a single small pearl; rules are hairlines with a soft nacre sheen; cards have generous
+       rounded corners.
+  12 Thread-gradient seams between colour bands → curved shell-lip panel edges.
+  13 Look-alike KTF Metro faces → Cormorant (display, true italic) + Hanken Grotesk (reading, interface),
+     sentence-case body copy; lining numerals so "M04" reads correctly.
+  14 Structure as lists → "The necklace": clasp = Holding Company, eight beads = the eight disciplines,
+     five pendant pearls = the brands; it strings itself as you scroll.
+  15 Form success flip → a pearl grows from the Send button and fills the card with the thank-you note.
+  16 Footer with giant woven name and landscape → a strand across the footer whose pearls drift toward the pointer.
+  Kept, as craft rather than signature: smooth Lenis scrolling, the easing family (.25,1,.5,1 / .76,0,.24,1),
+  1.2 / .8 / .4 s durations, staged text reveals, fibre-paper grain on light grounds.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>DORR Hospitality Group — Version 8</title>
+<meta name="description" content="DORR Hospitality Group: one Holding Company, one Services Company with eight disciplines, and five brands, each with its own character.">
+<meta name="theme-color" content="#141a1b">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="DORR 8">
+<link rel="preload" href="../vendor/fonts/cormorant-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../vendor/fonts/hanken-grotesk-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="img/hero.webp" as="image" type="image/webp">
+<link rel="stylesheet" href="css/fonts.css">
+<link rel="stylesheet" href="css/main.css">
+<script>
+  (function () {
+    var d = document.documentElement;
+    d.classList.add('js');
+    try { if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) d.classList.add('rm'); } catch (e) {}
+    try { if (sessionStorage.getItem('dorr8-visited')) d.classList.add('revisit'); } catch (e) {}
+    setTimeout(function () { if (!window.DORR_OK) d.classList.remove('js'); }, 6000);
+  })();
+</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <radialGradient id="pearl" cx="36%" cy="32%" r="72%">
+      <stop offset="0" stop-color="#fffdf8"/>
+      <stop offset=".35" stop-color="#ebe3d6"/>
+      <stop offset=".78" stop-color="#c4b8a6"/>
+      <stop offset="1" stop-color="#9c907f"/>
+    </radialGradient>
+    <radialGradient id="pearl-dark" cx="36%" cy="32%" r="72%">
+      <stop offset="0" stop-color="#f6f1e8"/>
+      <stop offset=".4" stop-color="#d6cdbd"/>
+      <stop offset=".85" stop-color="#9d9383"/>
+      <stop offset="1" stop-color="#6f675b"/>
+    </radialGradient>
+  </defs>
+</svg>
+
+<!-- Loader: a thread is drawn, seven pearls are strung on it -->
+<div class="loader" data-loader aria-hidden="true">
+  <svg class="loader__svg" viewBox="0 0 1000 240" preserveAspectRatio="xMidYMid meet">
+    <path class="loader__thread" data-loader-thread d="M -20 120 C 250 150, 750 150, 1020 120"/>
+    <g data-loader-pearls>
+      <circle cx="0" cy="0" r="15" fill="url(#pearl)"/><circle cx="0" cy="0" r="17" fill="url(#pearl)"/>
+      <circle cx="0" cy="0" r="19" fill="url(#pearl)"/><circle cx="0" cy="0" r="24" fill="url(#pearl)"/>
+      <circle cx="0" cy="0" r="19" fill="url(#pearl)"/><circle cx="0" cy="0" r="17" fill="url(#pearl)"/>
+      <circle cx="0" cy="0" r="15" fill="url(#pearl)"/>
+    </g>
+  </svg>
+  <p class="loader__name">DORR</p>
+  <p class="loader__note"><em>stringing the pearls</em></p>
+</div>
+
+<!-- Iris transition -->
+<div class="iris" data-iris aria-hidden="true"></div>
+
+<header class="hd" data-header>
+  <a class="hd__mark" href="#top" data-nav><span class="hd__word">DORR</span><span class="hd__sub">Hospitality Group</span></a>
+  <div class="hd__right">
+    <a class="hd__link" href="#contact" data-nav><span class="ul">Write to us</span></a>
+    <button class="hd__index" type="button" data-index-open aria-expanded="false" aria-controls="index"><span class="bead" aria-hidden="true"></span><span class="hd__index-label">Index</span></button>
+  </div>
+</header>
+
+<!-- Section strand (desktop) -->
+<nav class="strand" aria-label="Chapters" data-strand-nav>
+  <span class="strand__thread" aria-hidden="true"><i data-strand-fill></i></span>
+  <ol>
+    <li><a href="#top" data-nav data-strand-link><span class="strand__bead"></span><span class="strand__label">The pearl</span></a></li>
+    <li><a href="#thread" data-nav data-strand-link><span class="strand__bead"></span><span class="strand__label">One thread</span></a></li>
+    <li><a href="#necklace" data-nav data-strand-link><span class="strand__bead"></span><span class="strand__label">The necklace</span></a></li>
+    <li><a href="#pearls" data-nav data-strand-link><span class="strand__bead"></span><span class="strand__label">Five pearls</span></a></li>
+    <li><a href="#vision" data-nav data-strand-link><span class="strand__bead"></span><span class="strand__label">Vision</span></a></li>
+    <li><a href="#contact" data-nav data-strand-link><span class="strand__bead"></span><span class="strand__label">Write</span></a></li>
+  </ol>
+</nav>
+
+<!-- Index overlay -->
+<div class="index" id="index" data-index role="dialog" aria-modal="true" aria-label="Index" hidden>
+  <div class="index__inner">
+    <nav aria-label="Index">
+      <ol class="index__list">
+        <li><a href="#top" data-nav data-index-link><em>i</em><span>The pearl</span></a></li>
+        <li><a href="#thread" data-nav data-index-link><em>ii</em><span>One thread</span></a></li>
+        <li><a href="#necklace" data-nav data-index-link><em>iii</em><span>The necklace</span></a></li>
+        <li><a href="#pearls" data-nav data-index-link><em>iv</em><span>Five pearls</span></a></li>
+        <li><a href="#vision" data-nav data-index-link><em>v</em><span>Vision</span></a></li>
+        <li><a href="#contact" data-nav data-index-link><em>vi</em><span>Write to the house</span></a></li>
+      </ol>
+    </nav>
+    <div class="index__aside">
+      <p class="label"><span class="dot"></span>DORR Hospitality Group</p>
+      <p class="index__text">One Holding Company. One Services Company with eight disciplines. Five brands, each with its own character.</p>
+      <a class="index__mail" href="mailto:hello@dorr.example">hello@dorr.example</a>
+    </div>
+  </div>
+</div>
+
+<main id="main">
+
+  <!-- i · THE PEARL -->
+  <section class="hero" id="top" data-theme="dark" aria-label="DORR Hospitality Group">
+    <div class="hero__stage">
+      <div class="hero__pearl" data-hero-pearl>
+        <div class="hero__media" data-hero-media>
+          <picture>
+            <source media="(max-width: 700px)" srcset="img/hero-m.webp" width="1000" height="1250">
+            <img src="img/hero.webp" alt="Golden morning fog rolling over a headland above the sea" width="1920" height="1280" fetchpriority="high" decoding="async">
+          </picture>
+          <canvas data-strand="hero"></canvas>
+          <div class="hero__veil" data-hero-veil></div>
+        </div>
+      </div>
+      <p class="hero__cap hero__cap--l" data-hero-cap><span class="label"><span class="dot"></span>The clasp</span>One Holding Company, setting direction and governance.</p>
+      <p class="hero__cap hero__cap--r" data-hero-cap><span class="label"><span class="dot"></span>The pearls</span>Five brands, each with its own character.</p>
+      <h1 class="hero__title" data-hero-title>
+        <span class="hero__sub"><em>Hospitality Group</em></span>
+        <span class="hero__name">DORR</span>
+      </h1>
+      <div class="hero__cue" data-hero-cue aria-hidden="true"><span class="hero__cue-thread"><i></i></span><span>Scroll</span></div>
+      <p class="hero__open" data-hero-open><em>The shell protects.</em> The pearl shines.</p>
+    </div>
+  </section>
+
+  <!-- ii · ONE THREAD -->
+  <section class="thread panel panel--pearl" id="thread" data-theme="light">
+    <p class="label" data-r="up"><span class="dot"></span>One thread</p>
+    <p class="statement" data-fill>
+      One thread, many pearls.
+      <span class="inl" aria-hidden="true"><img src="img/oyster.webp" alt="" width="900" height="900" loading="lazy" decoding="async"></span>
+      DORR brings every brand into one clear structure and one integrated operating model
+      <span class="inl" aria-hidden="true"><img src="img/chef.webp" alt="" width="1100" height="1375" loading="lazy" decoding="async"></span>
+      sharing expertise, while each house keeps its own light
+      <span class="inl" aria-hidden="true"><img src="img/sayah.webp" alt="" width="1000" height="1250" loading="lazy" decoding="async"></span>
+    </p>
+
+    <div class="intro" id="dossier">
+      <figure class="arch" data-arch>
+        <div class="arch__media" data-parallax>
+          <img src="img/intro.webp" alt="A long reflecting pool beside white terraces with loungers at dusk" width="1500" height="1125" loading="lazy" decoding="async">
+          <canvas data-strand="photo" data-ground="#ece6da"></canvas>
+        </div>
+        <figcaption class="small">Move across the picture and its pearls roll aside.</figcaption>
+      </figure>
+      <div class="intro__text">
+        <h2 class="h2" data-r="lines">Introduction</h2>
+        <p class="body" data-r="up">As the Group continues to expand its portfolio of hospitality concepts, the need for a clear organizational structure and an integrated operating model has become increasingly important. The Group currently manages multiple businesses with distinct identities and operational requirements, while sharing a common vision for growth, excellence, and long-term sustainability.</p>
+        <h2 class="h2 h2--gap" data-r="lines">The model</h2>
+        <p class="body" data-r="up">Through the creation of a dedicated Services Company operating under the guidance of the Holding Company, the Group is able to leverage shared expertise while preserving the individuality and entrepreneurial spirit of each brand. The structure is designed to centralize specialized services, improve operational efficiency, enhance collaboration between entities, and establish a scalable foundation for future expansion.</p>
+      </div>
+    </div>
+
+    <div class="shell">
+      <h3 class="h3" data-r="lines">What the shell is for</h3>
+      <div class="shell__strand" data-shell-strand>
+        <span class="shell__line" aria-hidden="true"></span>
+        <ol class="shell__list">
+          <li><span class="shell__pearl" aria-hidden="true"></span><span class="num">01</span><strong>Stronger governance</strong><span class="small">Clear oversight across every entity.</span></li>
+          <li><span class="shell__pearl" aria-hidden="true"></span><span class="num">02</span><strong>Optimized resources</strong><span class="small">Shared expertise, used where it adds most.</span></li>
+          <li><span class="shell__pearl" aria-hidden="true"></span><span class="num">03</span><strong>Room to innovate</strong><span class="small">A structure that supports new ideas.</span></li>
+          <li><span class="shell__pearl" aria-hidden="true"></span><span class="num">04</span><strong>Agility &amp; consistency</strong><span class="small">The same standard, everywhere.</span></li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- iii · THE NECKLACE -->
+  <section class="necklace panel panel--ink" id="necklace" data-theme="dark">
+    <div class="necklace__pin" data-necklace>
+      <div class="necklace__head">
+        <p class="label" data-r="up"><span class="dot"></span>The necklace</p>
+        <h2 class="h1" data-r="lines">Strung on <em>one</em> thread</h2>
+        <p class="body body--dim" data-r="up">The Holding Company is the clasp. The Services Company is the thread that runs through every house. The brands are the pearls.</p>
+      </div>
+      <figure class="necklace__fig">
+        <svg class="necklace__svg" viewBox="0 0 1200 760" role="img" aria-labelledby="nk-title nk-desc">
+          <title id="nk-title">The structure of DORR as a necklace</title>
+          <desc id="nk-desc">The Holding Company sits at the clasp. The Services Company thread carries eight disciplines as beads. Five pearls hang from it: DADA Restaurant, SAYAH Beachclub, DÉJÀ VU, M04 and RANDEZVOU.</desc>
+          <path class="nk__thread" data-nk-thread d="M600 70 C 330 70, 150 210, 165 400 C 180 590, 400 650, 600 650 C 800 650, 1020 590, 1035 400 C 1050 210, 870 70, 600 70"/>
+          <g class="nk__clasp" data-nk-clasp>
+            <circle cx="600" cy="70" r="16" class="nk__claspring"/>
+            <circle cx="600" cy="70" r="7" fill="url(#pearl-dark)"/>
+            <text x="600" y="30" class="nk__t nk__t--c nk__t--big">Holding Company</text>
+          </g>
+          <g data-nk-beads></g>
+          <g data-nk-pendants></g>
+          <text x="600" y="330" class="nk__t nk__t--c nk__t--mid" data-nk-center>Services Company</text>
+          <text x="600" y="362" class="nk__t nk__t--c nk__t--sm" data-nk-center>eight disciplines on one thread</text>
+        </svg>
+      </figure>
+      <div class="necklace__lists">
+        <div>
+          <p class="label"><span class="dot"></span>The thread · Services Company</p>
+          <ol class="disc" data-disc>
+            <li><span class="num">01</span>Culinary &amp; Beverage</li>
+            <li><span class="num">02</span>Creative &amp; Experience</li>
+            <li><span class="num">03</span>Marketing &amp; CRM</li>
+            <li><span class="num">04</span>People &amp; Culture</li>
+            <li><span class="num">05</span>Operations Excellence</li>
+            <li><span class="num">06</span>Project Development &amp; Opening</li>
+            <li><span class="num">07</span>Procurement &amp; Supply Chain</li>
+            <li><span class="num">08</span>Technology, Data &amp; Systems</li>
+          </ol>
+        </div>
+        <div>
+          <p class="label"><span class="dot"></span>The clasp · Holding Company</p>
+          <p class="small small--dim">Sets the strategic direction and governance of the Group.</p>
+          <p class="label label--gap"><span class="dot"></span>The pearls · Brands</p>
+          <p class="small small--dim">DADA Restaurant · SAYAH Beachclub · DÉJÀ VU · M04 · RANDEZVOU</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- iv · FIVE PEARLS -->
+  <section class="pearls panel panel--nacre" id="pearls" data-theme="light">
+    <div class="pearls__head">
+      <p class="label" data-r="up"><span class="dot"></span>Five pearls</p>
+      <h2 class="h1" data-r="lines">Each with its <em>own</em> character</h2>
+    </div>
+    <div class="pearls__body">
+      <div class="viewer" aria-hidden="true">
+        <div class="viewer__pearl" data-viewer>
+          <img src="img/dada.webp" alt="" width="1000" height="1250" decoding="async" loading="lazy" data-viewer-img>
+          <canvas data-strand="viewer" data-ground="#c9bfad"></canvas>
+        </div>
+        <p class="viewer__count"><span data-viewer-num>01</span> / 05</p>
+      </div>
+      <ol class="brands" data-brands>
+        <li class="brand" data-brand data-src="img/dada.webp">
+          <figure class="brand__pic"><img src="img/dada.webp" alt="A warm restaurant corner with a woven pendant over a round table" width="1000" height="1250" loading="lazy" decoding="async"></figure>
+          <span class="num">01</span>
+          <h3 class="brand__name">DADA</h3>
+          <p class="small">Restaurant · Part of DORR Hospitality Group</p>
+        </li>
+        <li class="brand" data-brand data-src="img/sayah.webp">
+          <figure class="brand__pic"><img src="img/sayah.webp" alt="Woven lamps framing a beach of white parasols at sunset" width="1000" height="1250" loading="lazy" decoding="async"></figure>
+          <span class="num">02</span>
+          <h3 class="brand__name">SAYAH</h3>
+          <p class="small">Beachclub · Part of DORR Hospitality Group</p>
+        </li>
+        <li class="brand" data-brand data-src="img/dejavu.webp">
+          <figure class="brand__pic"><img src="img/dejavu.webp" alt="A cocktail on a wooden table in a shaft of warm light" width="1000" height="1250" loading="lazy" decoding="async"></figure>
+          <span class="num">03</span>
+          <h3 class="brand__name">DÉJÀ VU</h3>
+          <p class="small">A DORR hospitality concept</p>
+        </li>
+        <li class="brand" data-brand data-src="img/m04.webp">
+          <figure class="brand__pic"><img src="img/m04.webp" alt="An old fashioned with orange peel on a dark marble bar" width="1000" height="1250" loading="lazy" decoding="async"></figure>
+          <span class="num">04</span>
+          <h3 class="brand__name">M04</h3>
+          <p class="small">A DORR hospitality concept</p>
+        </li>
+        <li class="brand" data-brand data-src="img/randezvou.webp">
+          <figure class="brand__pic"><img src="img/randezvou.webp" alt="A bowl of lemons on a white terrace table above a blue bay" width="1000" height="1250" loading="lazy" decoding="async"></figure>
+          <span class="num">05</span>
+          <h3 class="brand__name">RANDEZVOU</h3>
+          <p class="small">A DORR hospitality concept</p>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- v · VISION -->
+  <section class="vision panel panel--pearl" id="vision" data-theme="light">
+    <p class="label label--c" data-r="up"><span class="dot"></span>Future vision</p>
+    <p class="vision__line" data-r="lines">A leading hospitality platform, recognized for <em>innovation</em>, operational excellence and <em>distinctive</em> guest experiences.</p>
+    <figure class="vision__pano" data-pano>
+      <picture>
+        <source media="(max-width: 700px)" srcset="img/vision-m.webp" width="900" height="1600">
+        <img src="img/vision.webp" alt="An infinity pool running toward misty mountains" width="1920" height="1200" loading="lazy" decoding="async">
+      </picture>
+      <canvas data-strand="vision" data-ground="#ece6da"></canvas>
+    </figure>
+    <div class="vision__cols">
+      <p class="body" data-r="up">The organizational structure has been designed to support both the current portfolio of businesses and future growth opportunities. As the organization expands, new hospitality concepts, restaurant brands, and complementary ventures can be integrated efficiently within a unified governance framework.</p>
+      <p class="body" data-r="up">Through centralized expertise, disciplined oversight, and shared resources, the Group seeks to build a resilient and scalable organization capable of adapting to evolving market conditions while maintaining consistent standards across its portfolio.</p>
+      <p class="body" data-r="up">As the platform matures, the Group may evaluate opportunities to extend selected capabilities beyond its internal portfolio, where such initiatives align with its long-term vision and create additional shareholder value.</p>
+      <p class="body" data-r="up">Ultimately, the vision is a diversified ecosystem of hospitality brands operating under a unified strategic direction, while preserving the distinctive identity and character of each concept.</p>
+    </div>
+  </section>
+
+  <!-- vi · WRITE -->
+  <section class="contact panel panel--ink" id="contact" data-theme="dark">
+    <div class="contact__grid">
+      <div class="contact__head">
+        <p class="label" data-r="up"><span class="dot"></span>Contact</p>
+        <h2 class="h1" data-r="lines">Write to <em>the house</em></h2>
+        <p class="body body--dim" data-r="up">For partnerships, new concepts and opportunities across the DORR Group.</p>
+        <div class="mailrow" data-r="up">
+          <a class="mailrow__mail ul" href="mailto:hello@dorr.example">hello@dorr.example</a>
+          <button class="btn btn--line" type="button" data-copy="hello@dorr.example">Copy</button>
+          <span class="small mailrow__status" data-copy-status role="status" aria-live="polite"></span>
+        </div>
+      </div>
+      <div class="card" data-card>
+        <form class="card__form" data-form novalidate>
+          <p class="card__title">A note to DORR</p>
+          <label class="field"><span class="small">Name</span><input name="name" type="text" autocomplete="name" required></label>
+          <label class="field"><span class="small">Email</span><input name="email" type="email" autocomplete="email" required></label>
+          <label class="field"><span class="small">Message</span><textarea name="message" rows="3" required></textarea></label>
+          <p class="small card__error" data-form-error role="alert"></p>
+          <button class="btn btn--ink" type="submit" data-send><span class="btn__pearl" aria-hidden="true"></span>Send</button>
+        </form>
+        <div class="card__done" data-done tabindex="-1" aria-live="polite" hidden>
+          <span class="card__done-pearl" aria-hidden="true"></span>
+          <p class="card__title">Thank you</p>
+          <p class="body">This is a preview edition, so nothing was sent. Please write to <a class="ul" href="mailto:hello@dorr.example">hello@dorr.example</a>.</p>
+          <button class="btn btn--line" type="button" data-form-reset>Write another</button>
+        </div>
+        <div class="card__grow" data-grow aria-hidden="true"></div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="ft" data-theme="dark">
+  <p class="ft__line">One thread. <em>Many pearls.</em></p>
+  <div class="ft__strand" data-ft-strand aria-hidden="true">
+    <svg viewBox="0 0 1200 120" preserveAspectRatio="none"><path d="M0 40 C 300 100, 900 100, 1200 40" class="ft__thread"/></svg>
+    <div class="ft__beads" data-ft-beads></div>
+  </div>
+  <div class="ft__cols">
+    <div>
+      <p class="label"><span class="dot"></span>DORR Hospitality Group</p>
+      <p class="small small--dim">Holding Company · Services Company · DADA Restaurant · SAYAH Beachclub · DÉJÀ VU · M04 · RANDEZVOU</p>
+    </div>
+    <div>
+      <p class="label"><span class="dot"></span>Write</p>
+      <a class="small ul" href="mailto:hello@dorr.example">hello@dorr.example</a>
+    </div>
+    <div>
+      <p class="label"><span class="dot"></span>Photographs</p>
+      <p class="small small--dim">Unsplash — Dominik Mattern, Mitili Mitili, Nahima Aparicio, Jason Leung, Decima Athens, Cassie Gallegos, Jakub Dziubak, Pylyp Sukhenko, Arlind Photography, Karsten Winegeart.</p>
+    </div>
+  </div>
+  <div class="ft__base">
+    <p class="small">© 2026 DORR Hospitality Group</p>
+    <a class="small ul" href="#top" data-nav>Back to the clasp ↑</a>
+  </div>
+</footer>
+
+<script src="../vendor/js/gsap.min.js" defer></script>
+<script src="../vendor/js/ScrollTrigger.min.js" defer></script>
+<script src="../vendor/js/lenis.min.js" defer></script>
+<script src="js/strand.js" defer></script>
+<script src="js/main.js" defer></script>
+</body>
+</html>

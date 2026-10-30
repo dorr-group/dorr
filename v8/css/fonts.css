@@ -1,0 +1,23 @@
+/* DORR v8 — "Strand". Cormorant (light, high-contrast display serif with a true italic) for the voice of the
+   house; Hanken Grotesk (quiet humanist grotesk) for reading and interface. Both SIL OFL, self-hosted. */
+@font-face {
+  font-family: "Cormorant";
+  src: url("../../vendor/fonts/cormorant-latin-wght-normal.woff2") format("woff2");
+  font-weight: 300 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Cormorant";
+  src: url("../../vendor/fonts/cormorant-latin-wght-italic.woff2") format("woff2");
+  font-weight: 300 700;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Hanken Grotesk";
+  src: url("../../vendor/fonts/hanken-grotesk-latin-wght-normal.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}

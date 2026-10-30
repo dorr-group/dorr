@@ -22,3 +22,9 @@ Published with GitHub Pages from the `main` branch.
 - The structure grows ring by ring: Holding, eight departments, five brands
 - Brands on a sideways strip of pill-shaped frames; contact in an arched card over embers
 
+
+## Version 8 (`v8/`)
+"Strand": one thread, many pearls. Open `v8/index.html`.
+- The Holding Company is the clasp, the Services Company the thread, the five brands the pearls
+- Photos redrawn live as rows of shaded pearls on sagging threads (WebGL) that resolve into the photograph
+- A necklace that strings itself on scroll; brands beside one round viewer that re-strings for each
