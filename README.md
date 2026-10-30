@@ -28,9 +28,3 @@ Published with GitHub Pages from the `main` branch.
 - Woven DORR wordmark, threaded oyster loader, dither page transitions
 - Alternating ink and nacre bands, pinned brand rail, scroll-speed marquee
 
-## Version 7 (`v7/`)
-"The Return", a second, closer reading of ERA Residence's material and motion (own colours). Open `v7/index.html`.
-- Arch-window loader, condensed serif caps crossed by a fine script, letter-flip reveals
-- Day/night hero with pins, a sea-glass arch carrying text on a curved path
-- Sideways "One Holding Company" scroll and a hand-drawn route through the eight departments
-- Auto-advancing brand slider, arch window for Future Vision, animated page transition to a contact page
