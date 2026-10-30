@@ -22,9 +22,3 @@ Published with GitHub Pages from the `main` branch.
 - The structure grows ring by ring: Holding, eight departments, five brands
 - Brands on a sideways strip of pill-shaped frames; contact in an arched card over embers
 
-## Version 8 (`v8/`)
-"Loom", a second, closer reading of Son Daven's material and motion (own colours). Open `v8/index.html`.
-- Photos rendered live as loom threads (WebGL) that weave in and part under the cursor
-- Woven DORR wordmark, threaded oyster loader, dither page transitions
-- Alternating ink and nacre bands, pinned brand rail, scroll-speed marquee
-
