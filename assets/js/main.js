@@ -109,6 +109,9 @@
   gsap.registerPlugin(ScrollTrigger);
   ScrollTrigger.config({ ignoreMobileResize: true });
   const EASE = 'expo.out';
+  // Pins are applied in the same frame as Lenis scrolls, so anticipating them only
+  // makes sections jump early. Native touch scrolling runs off-thread and needs it.
+  const ANTICIPATE = ScrollTrigger.isTouch === 1 ? 1 : 0;
 
   /* -------------------------------------------------------- smooth scroll */
   if (window.Lenis) {
@@ -116,6 +119,12 @@
     lenis.on('scroll', ScrollTrigger.update);
     gsap.ticker.add((t) => lenis.raf(t * 1000));
     gsap.ticker.lagSmoothing(0);
+    // While stopped (loader, menu) Lenis blocks wheel and touch; keep the keyboard
+    // from scrolling the page hidden behind them too.
+    const scrollKeys = [' ', 'PageDown', 'PageUp', 'ArrowDown', 'ArrowUp', 'Home', 'End'];
+    document.addEventListener('keydown', (e) => {
+      if (lenis.isStopped && scrollKeys.includes(e.key) && !e.target.closest('button, input, textarea')) e.preventDefault();
+    });
     $$('a[href^="#"]').forEach((a) => a.addEventListener('click', (e) => {
       const id = a.getAttribute('href');
       const target = id === '#top' ? 0 : $(id);
@@ -184,6 +193,17 @@
       fr(gsap.utils.clamp(-10, 10, (e.clientX - lastX) * 0.6));
       lastX = e.clientX;
     });
+    // Build and decode every image the first time the pointer reaches the list,
+    // so the first hover doesn't stall on a full-size decode.
+    $('[data-svc]').addEventListener('pointerenter', () => {
+      $$('.svc__item').forEach((item) => {
+        const src = item.dataset.img;
+        if (cache[src]) return;
+        const img = new Image(); img.src = src; img.alt = ''; img.style.opacity = 0;
+        img.decode?.().catch(() => {});
+        inner.appendChild(img); cache[src] = img;
+      });
+    }, { once: true });
     $$('.svc__item').forEach((item) => {
       item.addEventListener('pointerenter', () => { if (!item.classList.contains('is-open')) show(item.dataset.img); });
       item.addEventListener('pointerleave', hide);
@@ -209,8 +229,10 @@
   const heroMedia = $('.hero__media', aperture);
   const heroImg = $('img', aperture);
   const heroWords = $$('.hero__title .wi');
+  const stage = $('.hero__stage');
   const startR = () => Math.min(innerWidth, innerHeight) * (innerWidth < 640 ? 0.26 : 0.17);
-  const endR = () => Math.hypot(innerWidth / 2, innerHeight * 0.52) * 1.02;
+  // measured on the stage itself: it has a min-height, so on short screens it is taller than the window
+  const endR = () => Math.hypot(stage.offsetWidth / 2, stage.offsetHeight * 0.52) * 1.02;
   gsap.set(aperture, { '--k': 0 });
   gsap.set(heroWords, { yPercent: 115 });
   gsap.set('.hero .reveal', { autoAlpha: 0, y: 24 });
@@ -218,7 +240,7 @@
 
   gsap.timeline({
     defaults: { ease: 'none' },
-    scrollTrigger: { trigger: hero, start: 'top top', end: '+=110%', scrub: 0.9, pin: '.hero__stage', anticipatePin: 1, invalidateOnRefresh: true },
+    scrollTrigger: { trigger: hero, start: 'top top', end: '+=110%', scrub: 0.9, pin: stage, anticipatePin: ANTICIPATE, invalidateOnRefresh: true },
   })
     .fromTo(aperture, { '--r': () => startR() + 'px' }, { '--r': () => endR() + 'px' }, 0)
     .fromTo(heroImg, { scale: 1.22 }, { scale: 1 }, 0)
@@ -240,8 +262,9 @@
   let seen = false;
   try { seen = sessionStorage.getItem('dorr-seen') === '1'; sessionStorage.setItem('dorr-seen', '1'); } catch (e) {}
 
+  // No scrollTo(0, 0) here: on reload the browser restores the reader's place after
+  // this runs anyway, so forcing the top only raced it. The loader covers either case.
   if (lenis) lenis.stop();
-  window.scrollTo(0, 0);
   const progress = { v: 0 };
   const paint = () => {
     ringCircle.style.strokeDashoffset = 578 * (1 - progress.v / 100);
@@ -264,6 +287,70 @@
       .to(loader, { autoAlpha: 0, duration: 0.8, ease: 'power2.out' }, '<0.2')
       .add(() => { loader.remove(); if (lenis) lenis.start(); ScrollTrigger.refresh(); });
   });
+
+  /* ------------------------------------- structure: the orbit (pinned) */
+  // Pinned sections are created first and in page order: a trigger below a pin
+  // must be measured after that pin's spacer exists, or it fires screens early.
+  const structure = $('[data-structure]');
+  if (structure) {
+    const nodes = $$('.node', structure);
+    const caps = $$('.cap', structure);
+    const imgs = $$('[data-node-img]', structure);
+    const n = nodes.length;
+    let current = 0;
+    const setNode = (i) => {
+      if (i === current) return;
+      current = i;
+      nodes.forEach((el, k) => { el.classList.toggle('is-active', k === i); el.classList.toggle('is-done', k < i); });
+      caps.forEach((el, k) => el.classList.toggle('is-active', k === i));
+      imgs.forEach((el, k) => el.classList.toggle('is-active', k === i));
+    };
+    gsap.timeline({
+      defaults: { ease: 'none' },
+      // follow the scrubbed timeline, not the raw scroll, so a node lights up
+      // exactly when the travelling dot reaches it
+      onUpdate() { setNode(Math.min(n - 1, Math.floor(this.progress() * n))); },
+      scrollTrigger: {
+        trigger: structure, start: 'top top', end: '+=' + n * 70 + '%', scrub: 0.6, pin: '.structure__pin', anticipatePin: ANTICIPATE,
+      },
+    })
+      .fromTo('[data-ring]', { strokeDashoffset: 1131 }, { strokeDashoffset: 0 }, 0)
+      .fromTo('[data-ring-dot]', { rotation: 0 }, { rotation: 360, svgOrigin: '200 200' }, 0)
+      .fromTo('.orbit', { scale: 0.94 }, { scale: 1 }, 0);
+  }
+
+  /* --------------------------------------------- brands: horizontal */
+  const brands = $('[data-brands]');
+  if (brands) {
+    const track = $('[data-track]', brands);
+    const distance = () => Math.max(0, track.scrollWidth - innerWidth);
+    // the progress bar is driven by the same scrubbed tween, so it never runs ahead of the cards
+    const setBar = gsap.quickSetter('[data-brands-bar]', 'scaleX');
+    const horiz = gsap.to(track, {
+      x: () => -distance(), ease: 'none',
+      onUpdate() { setBar(this.progress()); },
+      scrollTrigger: {
+        trigger: brands, start: 'top top', end: () => '+=' + distance(), scrub: 0.8,
+        pin: '.brands__pin', anticipatePin: ANTICIPATE, invalidateOnRefresh: true,
+      },
+    });
+    $$('.brand-card', brands).forEach((card) => {
+      const img = $('img', card);
+      gsap.fromTo(img, { xPercent: 7 }, {
+        xPercent: -7, ease: 'none',
+        scrollTrigger: { trigger: card, containerAnimation: horiz, start: 'left right', end: 'right left', scrub: true },
+      });
+      // Cards visible before the pin starts reveal with the section; the rest about a
+      // card-width before they slide in, so they never arrive as empty frames.
+      const inFirstView = card.offsetLeft < innerWidth;
+      gsap.fromTo(card, { clipPath: 'inset(0% 0% 100% 0%)' }, {
+        clipPath: 'inset(0% 0% 0% 0%)', duration: 1.4, ease: 'expo.inOut', delay: inFirstView ? card.offsetLeft / innerWidth * 0.4 : 0,
+        scrollTrigger: inFirstView
+          ? { trigger: brands, start: 'top 60%', once: true }
+          : { trigger: card, containerAnimation: horiz, start: () => 'left right+=' + Math.round(card.offsetWidth + innerWidth * 0.25), toggleActions: 'play none none none' },
+      });
+    });
+  }
 
   /* ---------------------------------------------------- generic reveals */
   $$('.split').forEach((el) => {
@@ -294,70 +381,40 @@
     });
   });
 
-  /* ------------------------------------- structure: the orbit (pinned) */
-  const structure = $('[data-structure]');
-  if (structure) {
-    const nodes = $$('.node', structure);
-    const caps = $$('.cap', structure);
-    const imgs = $$('[data-node-img]', structure);
-    const n = nodes.length;
-    let current = 0;
-    const setNode = (i) => {
-      if (i === current) return;
-      current = i;
-      nodes.forEach((el, k) => { el.classList.toggle('is-active', k === i); el.classList.toggle('is-done', k < i); });
-      caps.forEach((el, k) => el.classList.toggle('is-active', k === i));
-      imgs.forEach((el, k) => el.classList.toggle('is-active', k === i));
-    };
-    gsap.timeline({
-      defaults: { ease: 'none' },
-      scrollTrigger: {
-        trigger: structure, start: 'top top', end: '+=' + n * 70 + '%', scrub: 0.6, pin: '.structure__pin', anticipatePin: 1,
-        onUpdate: (self) => setNode(Math.min(n - 1, Math.floor(self.progress * n))),
-      },
-    })
-      .fromTo('[data-ring]', { strokeDashoffset: 1131 }, { strokeDashoffset: 0 }, 0)
-      .fromTo('[data-ring-dot]', { rotation: 0 }, { rotation: 360, svgOrigin: '200 200' }, 0)
-      .fromTo('.orbit', { scale: 0.94 }, { scale: 1 }, 0);
-  }
-
-  /* --------------------------------------------- brands: horizontal */
-  const brands = $('[data-brands]');
-  if (brands) {
-    const track = $('[data-track]', brands);
-    const distance = () => Math.max(0, track.scrollWidth - innerWidth);
-    const horiz = gsap.to(track, {
-      x: () => -distance(), ease: 'none',
-      scrollTrigger: {
-        trigger: brands, start: 'top top', end: () => '+=' + distance(), scrub: 0.8,
-        pin: '.brands__pin', anticipatePin: 1, invalidateOnRefresh: true,
-      },
-    });
-    gsap.fromTo('[data-brands-bar]', { scaleX: 0 }, {
-      scaleX: 1, ease: 'none',
-      scrollTrigger: { trigger: brands, start: 'top top', end: () => '+=' + distance(), scrub: true, invalidateOnRefresh: true },
-    });
-    $$('.brand-card', brands).forEach((card) => {
-      const img = $('img', card);
-      gsap.fromTo(img, { xPercent: 7 }, {
-        xPercent: -7, ease: 'none',
-        scrollTrigger: { trigger: card, containerAnimation: horiz, start: 'left right', end: 'right left', scrub: true },
-      });
-      // Cards visible before the pin starts reveal with the section; the rest as they slide in.
-      const inFirstView = card.offsetLeft < innerWidth;
-      gsap.fromTo(card, { clipPath: 'inset(0% 0% 100% 0%)' }, {
-        clipPath: 'inset(0% 0% 0% 0%)', duration: 1.4, ease: 'expo.inOut', delay: inFirstView ? card.offsetLeft / innerWidth * 0.4 : 0,
-        scrollTrigger: inFirstView
-          ? { trigger: brands, start: 'top 60%', once: true }
-          : { trigger: card, containerAnimation: horiz, start: 'left 102%', toggleActions: 'play none none none' },
-      });
-    });
-  }
-
   /* ---------------------------------------------------- footer mark */
   gsap.fromTo('.footer__mark span', { yPercent: 55 }, {
     yPercent: 0, ease: 'none',
     scrollTrigger: { trigger: '.footer', start: 'top bottom', end: 'bottom bottom', scrub: true },
+  });
+
+  /* ------------------------------------- keep the reader's place on resize */
+  // A resize or phone rotation changes every pin length, so the same pixel offset
+  // lands in a different section. Remember where we are within the current section
+  // when scrolling stops, and put the reader back there after the refresh.
+  // inside a pinned section its own progress is the exact place; elsewhere the section's
+  const pins = ScrollTrigger.getAll().filter((t) => t.pin);
+  const marks = $$('main > section').map((el) => ScrollTrigger.create({ trigger: el, start: 'top top', end: 'bottom top' }));
+  let place = null;
+  let hold = 0; // a rotation can refresh more than once: keep restoring for a moment
+  // the window size the current layout was measured at; address-bar (height-only)
+  // changes on touch devices don't trigger a refresh, so they don't count there
+  const touchOnly = ScrollTrigger.isTouch === 1;
+  let laidOut = { w: innerWidth, h: innerHeight };
+  const sameSize = (a) => a.w === innerWidth && (touchOnly || a.h === innerHeight);
+  ScrollTrigger.addEventListener('scrollEnd', () => {
+    // resized but not refreshed yet, or our own restore: not the reader scrolling
+    if (performance.now() < hold || !sameSize(laidOut)) return;
+    const m = pins.find((t) => t.isActive) || marks.find((t) => t.isActive);
+    place = m ? { m, p: m.progress, w: innerWidth, h: innerHeight } : null;
+  });
+  ScrollTrigger.addEventListener('refresh', () => {
+    laidOut = { w: innerWidth, h: innerHeight };
+    if (!place) return;
+    if (!sameSize(place)) { place.w = innerWidth; place.h = innerHeight; hold = performance.now() + 1500; }
+    else if (performance.now() >= hold) return;
+    const y = place.m.start + place.p * (place.m.end - place.m.start);
+    // Lenis may not have re-measured the page yet and would clamp to the old height
+    if (lenis) { lenis.resize(); lenis.scrollTo(y, { immediate: true, force: true }); } else window.scrollTo(0, y);
   });
 
   window.addEventListener('load', () => ScrollTrigger.refresh());

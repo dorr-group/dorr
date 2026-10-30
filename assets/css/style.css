@@ -40,7 +40,8 @@
 html { -webkit-text-size-adjust: 100%; }
 html.lenis, html.lenis body { height: auto; }
 .lenis.lenis-smooth { scroll-behavior: auto !important; }
-.lenis.lenis-stopped { overflow: hidden; }
+/* No overflow: hidden while Lenis is stopped (loader, menu): it removed the scrollbar and the
+   whole page shifted sideways when it came back. Lenis already blocks wheel and touch. */
 
 body {
   margin: 0;
@@ -86,7 +87,7 @@ em { font-style: italic; color: var(--saffron); }
 
 /* ---------- split text masks ---------- */
 .split .w { display: inline-block; overflow: hidden; vertical-align: top; padding-bottom: 0.12em; margin-bottom: -0.12em; }
-.split .wi { display: inline-block; will-change: transform; }
+.split .wi { display: inline-block; } /* no permanent will-change: GSAP goes 3D only while a word animates */
 
 /* ---------- buttons ---------- */
 .btn {
@@ -122,7 +123,7 @@ em { font-style: italic; color: var(--saffron); }
 /* ---------- grain ---------- */
 .grain {
   position: fixed;
-  inset: -100%;
+  inset: -10%; /* just enough overscan for the 6% jitter; -100% made a 9× screen-size layer */
   z-index: 90;
   pointer-events: none;
   opacity: 0.075;
@@ -149,7 +150,8 @@ html:not(.js) .loader { display: none; }
 
 /* ---------- cursor ---------- */
 .cursor { position: fixed; inset: 0 auto auto 0; z-index: 95; pointer-events: none; mix-blend-mode: difference; display: none; transition: opacity 0.3s; }
-@media (hover: hover) and (pointer: fine) { .cursor { display: block; } html.js body, html.js a, html.js button { cursor: none; } }
+/* only hide the system cursor when the custom one actually runs (not in reduced motion) */
+@media (hover: hover) and (pointer: fine) { html:not(.rm) .cursor { display: block; } html.js:not(.rm) body, html.js:not(.rm) a, html.js:not(.rm) button { cursor: none; } }
 .cursor__dot, .cursor__ring { position: fixed; top: 0; left: 0; border-radius: 50%; translate: -50% -50%; }
 .cursor__dot { width: 6px; height: 6px; background: var(--cream); }
 .cursor__ring {
@@ -277,7 +279,7 @@ html:not(.js) .scrub-words .sw, html.rm .scrub-words .sw { opacity: 1; }
 .structure__label { position: absolute; top: clamp(90px, 12vh, 120px); left: var(--gutter); margin: 0; }
 .structure__note { position: absolute; bottom: clamp(24px, 5vh, 44px); left: var(--gutter); max-width: 38ch; font-size: 0.92rem; color: rgba(243,236,225,0.65); }
 
-.orbit { --size: min(76vh, 86vw); --R: calc(var(--size) * 0.45); position: relative; width: var(--size); aspect-ratio: 1; }
+.orbit { --size: min(76vh, 86vw); --R: calc(var(--size) * 0.45); position: relative; width: var(--size); aspect-ratio: 1; will-change: transform; } /* scrubbed: own layer, so the photo underneath isn't repainted every frame */
 .orbit svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
 .ring-track { fill: none; stroke: var(--line-light); stroke-width: 1; }
 .ring-progress { fill: none; stroke: var(--saffron); stroke-width: 1.4; stroke-dasharray: 1131; stroke-dashoffset: 1131; transform: rotate(-90deg); transform-origin: 200px 200px; }
@@ -322,12 +324,14 @@ html:not(.js) .structure__label, html.rm .structure__label { top: 90px; }
 .brands__head .label { margin-bottom: 0.8rem; }
 .brands__head .section-title { font-size: clamp(2.4rem, 4.8vw, 5rem); }
 .brands__track { display: flex; align-items: flex-end; gap: clamp(20px, 3vw, 52px); padding-inline: var(--gutter) 24vw; padding-top: clamp(170px, 28vh, 260px); width: max-content; will-change: transform; }
-.brand-card { flex: none; width: clamp(250px, 26vw, 430px); }
+.brand-card { flex: none; width: clamp(250px, 26vw, 430px); will-change: transform; } /* own layer: the clip-path reveal repaints the card, not the whole track */
 .brand-card--tall { width: clamp(230px, 22vw, 360px); }
 .brand-card__img { aspect-ratio: 4 / 5; overflow: hidden; position: relative; background: var(--ink-3); }
 .brand-card--tall .brand-card__img { aspect-ratio: 3 / 4.5; }
-.brand-card__img img { position: absolute; inset: 0 -12%; width: 124%; max-width: none; height: 100%; object-fit: cover; transition: transform 1.2s var(--ease); }
-.brand-card:hover .brand-card__img img { transform: scale(1.05); }
+/* GSAP scrubs this image's transform for the parallax: the hover zoom uses the separate
+   `scale` property, so a CSS transition never fights the scrub (that made it lag and stutter) */
+.brand-card__img img { position: absolute; inset: 0 -12%; width: 124%; max-width: none; height: 100%; object-fit: cover; transition: scale 1.2s var(--ease); will-change: transform; }
+.brand-card:hover .brand-card__img img { scale: 1.05; }
 .brand-card__meta { display: grid; grid-template-columns: auto 1fr; column-gap: 1rem; align-items: baseline; padding-top: 1.1rem; }
 .brand-card__meta span { font-size: 0.7rem; letter-spacing: 0.14em; color: var(--stone-2); }
 .brand-card__meta h3 { font-family: var(--f-display); font-weight: 400; font-size: clamp(2rem, 3vw, 3.2rem); line-height: 1; letter-spacing: 0.02em; }
@@ -336,7 +340,7 @@ html:not(.js) .structure__label, html.rm .structure__label { top: 90px; }
 .brands__end p { font-family: var(--f-display); font-style: italic; font-size: clamp(2.2rem, 3.6vw, 3.8rem); line-height: 1; color: var(--saffron); }
 .brands__end span { color: rgba(243,236,225,0.7); max-width: 32ch; }
 .brands__progress { position: absolute; bottom: clamp(24px, 5vh, 44px); inset-inline: var(--gutter); height: 1px; background: var(--line-light); }
-.brands__progress i { position: absolute; inset: 0; background: var(--saffron); transform: scaleX(0); transform-origin: left; }
+.brands__progress i { position: absolute; inset: 0; background: var(--saffron); transform: scaleX(0); transform-origin: left; will-change: transform; }
 html:not(.js) .brands__pin, html.rm .brands__pin { height: auto; overflow-x: auto; padding: 120px 0 100px; }
 
 /* ---------- services company ---------- */
@@ -385,6 +389,7 @@ html:not(.js) .brands__pin, html.rm .brands__pin { height: auto; overflow-x: aut
 .vision { background: var(--sand); padding-bottom: clamp(100px, 15vh, 180px); }
 .vision__img { height: clamp(460px, 92vh, 1000px); overflow: hidden; position: relative; color: var(--cream); }
 .vision__img img { width: 100%; height: 125%; object-fit: cover; position: absolute; top: -12.5%; }
+.parallax img { will-change: transform; }
 .vision__img::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(23,17,13,0.1) 30%, rgba(23,17,13,0.75) 100%); }
 .vision__quote {
   position: absolute; z-index: 2; left: var(--gutter); right: var(--gutter); bottom: clamp(32px, 7vh, 72px);
@@ -438,7 +443,7 @@ html:not(.js) .brands__pin, html.rm .brands__pin { height: auto; overflow-x: aut
 .footer__links a { opacity: 0.8; transition: opacity 0.3s, color 0.3s; }
 .footer__links a:hover { opacity: 1; color: var(--saffron); }
 .footer__mark { overflow: hidden; line-height: 0.76; margin-top: clamp(30px, 6vh, 60px); text-align: center; }
-.footer__mark span { display: inline-block; font-family: var(--f-display); font-size: 36vw; letter-spacing: -0.02em; color: var(--cream); }
+.footer__mark span { display: inline-block; font-family: var(--f-display); font-size: 36vw; letter-spacing: -0.02em; color: var(--cream); will-change: transform; }
 .footer__bottom { display: flex; justify-content: space-between; gap: 1rem; padding-block: 1.4rem 1.8rem; font-size: 0.8rem; color: var(--stone-2); border-top: 1px solid var(--line-light); }
 .totop:hover { color: var(--saffron); }
 

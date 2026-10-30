@@ -21,11 +21,15 @@
   --gl: max(var(--g), env(safe-area-inset-left, 0px));
   --gr: max(var(--g), env(safe-area-inset-right, 0px));
   --ease: cubic-bezier(0.19, 1, 0.22, 1);
+  /* full-screen scenes use the large viewport, so no strip opens under a pinned scene when the
+     mobile address bar slides away; --bar lifts their bottom-anchored UI clear of the bar */
+  --bar: 0px;
   color-scheme: dark;
 }
+@supports (height: 100lvh) { :root { --bar: calc(100lvh - 100svh); } }
 
 *, *::before, *::after { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; }
+html { -webkit-text-size-adjust: 100%; scrollbar-gutter: stable; }
 html.lenis, html.lenis body { height: auto; }
 .lenis.lenis-smooth { scroll-behavior: auto !important; }
 .lenis.lenis-stopped { overflow: hidden; }
@@ -86,7 +90,7 @@ html:not(.js) .loader, html.rm .loader { display: none; }
 
 /* ---------------- hero ---------------- */
 .hero { background: var(--bg); }
-.hero__pin { position: relative; height: 100vh; height: 100svh; min-height: 560px; overflow: hidden; background: radial-gradient(55% 50% at 50% 48%, #1b150e 0%, var(--bg) 70%); }
+.hero__pin { position: relative; height: 100vh; height: 100lvh; min-height: 560px; overflow: hidden; background: radial-gradient(55% 50% at 50% 48%, #1b150e 0%, var(--bg) 70%); }
 .hero__aperture { position: absolute; inset: 0; clip-path: circle(var(--r, 0px) at 50% 50%); }
 .hero__aperture img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.3); }
 .hero__aperture::after { content: ""; position: absolute; inset: 0; background: rgba(12, 10, 8, 0.28); }
@@ -95,7 +99,7 @@ html:not(.js) .loader, html.rm .loader { display: none; }
 html.gl .hero__fallback { visibility: hidden; }
 .hero__ui { position: absolute; inset: 0; pointer-events: none; }
 .hero__top { position: absolute; top: clamp(84px, 12vh, 120px); left: 0; right: 0; text-align: center; font-size: 0.68rem; letter-spacing: 0.5em; text-transform: uppercase; color: var(--muted); }
-.hero__bottom { position: absolute; left: var(--gl); right: var(--gr); bottom: clamp(24px, 5vh, 48px); display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) auto; gap: 1.4rem 3rem; align-items: end; }
+.hero__bottom { position: absolute; left: var(--gl); right: var(--gr); bottom: calc(clamp(24px, 5vh, 48px) + var(--bar)); display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) auto; gap: 1.4rem 3rem; align-items: end; }
 .hero__title { font-family: var(--f-d); font-size: clamp(2.2rem, 4.2vw, 4.8rem); line-height: 1; letter-spacing: -0.02em; max-width: 14ch; }
 .hero__lede { color: rgba(239, 232, 220, 0.72); max-width: 36ch; justify-self: end; }
 .hero__hint { display: flex; align-items: center; gap: 0.8rem; font-size: 0.66rem; letter-spacing: 0.24em; text-transform: uppercase; color: var(--muted); }
@@ -126,13 +130,13 @@ html.gl .hero__fallback { visibility: hidden; }
 
 /* ---------------- chapters ---------------- */
 .chapters { background: var(--bg); }
-.chapters__pin { position: relative; height: 100vh; height: 100svh; min-height: 560px; overflow: hidden; }
-.chapter { position: absolute; inset: 0; display: grid; place-items: center; background: var(--bg); overflow: hidden; }
+.chapters__pin { position: relative; height: 100vh; height: 100lvh; min-height: 560px; overflow: hidden; }
+.chapter { position: absolute; inset: 0; display: grid; place-items: center; padding-bottom: var(--bar); background: var(--bg); overflow: hidden; }
 .chapter__img { position: absolute; inset: 0; clip-path: circle(0% at 50% 50%); }
 .chapter__img img { width: 100%; height: 100%; object-fit: cover; }
 .chapter__img::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(12,10,8,0.35) 0%, rgba(12,10,8,0) 35%, rgba(12,10,8,0.85) 100%); }
 .chapter__name { position: relative; font-family: var(--f-d); font-size: 22vw; line-height: 0.86; letter-spacing: -0.03em; white-space: nowrap; color: transparent; background-size: cover; background-position: center; -webkit-background-clip: text; background-clip: text; padding: 0.24em 0.05em 0.12em; margin: -0.2em 0 -0.08em; }
-.chapter__meta { position: absolute; left: var(--gl); right: var(--gr); bottom: clamp(32px, 7vh, 72px); display: grid; gap: 0.6rem; }
+.chapter__meta { position: absolute; left: var(--gl); right: var(--gr); bottom: calc(clamp(32px, 7vh, 72px) + var(--bar)); display: grid; gap: 0.6rem; }
 .chapter__title { font-family: var(--f-d); font-size: clamp(2.8rem, 7.4vw, 8rem); line-height: 0.9; letter-spacing: -0.02em; }
 .chapter__kind { font-size: 0.72rem; letter-spacing: 0.24em; text-transform: uppercase; color: var(--gold); }
 .chapter--end { align-content: center; justify-items: center; gap: 2rem; text-align: center; padding: 0 var(--gr) 0 var(--gl); }
@@ -146,7 +150,7 @@ html.gl .hero__fallback { visibility: hidden; }
 
 /* ---------------- orbit ---------------- */
 .orbit { background: var(--bg-2); }
-.orbit__pin { position: relative; height: 100vh; height: 100svh; min-height: 620px; overflow: hidden; }
+.orbit__pin { position: relative; height: 100vh; height: 100lvh; min-height: 620px; overflow: hidden; }
 .orbit__eyebrow { position: absolute; top: clamp(84px, 12vh, 120px); left: var(--gl); }
 .orbit__stage { position: absolute; left: 50%; top: 44%; width: 0; height: 0; }
 .orbit__path { position: absolute; left: 0; top: 0; width: 1px; height: 1px; overflow: visible; }
@@ -157,11 +161,11 @@ html.gl .hero__fallback { visibility: hidden; }
 .orb { position: absolute; left: 0; top: 0; width: var(--orb, clamp(110px, 17vh, 190px)); aspect-ratio: 1; margin: calc(var(--orb, clamp(110px, 17vh, 190px)) / -2) 0 0 calc(var(--orb, clamp(110px, 17vh, 190px)) / -2); border-radius: 50%; overflow: hidden; border: 1px solid rgba(210, 160, 78, 0.5); will-change: transform; }
 .orb img { width: 100%; height: 100%; object-fit: cover; }
 .orb.is-front { border-color: var(--gold); box-shadow: 0 0 0 8px rgba(210, 160, 78, 0.12), 0 30px 80px rgba(0, 0, 0, 0.5); }
-.orbit__caption { position: absolute; left: var(--gl); bottom: clamp(28px, 6vh, 64px); max-width: min(560px, 60vw); }
+.orbit__caption { position: absolute; left: var(--gl); bottom: calc(clamp(28px, 6vh, 64px) + var(--bar)); max-width: min(560px, 60vw); }
 .orbit__k { font-size: 0.68rem; letter-spacing: 0.24em; text-transform: uppercase; color: var(--gold); }
 .orbit__t { font-family: var(--f-d); font-size: clamp(2.4rem, 5.4vw, 5.6rem); line-height: 0.95; letter-spacing: -0.02em; margin: 0.6rem 0 0.8rem; }
 .orbit__d { color: var(--muted); max-width: 40ch; }
-.orbit__note { position: absolute; right: var(--gr); bottom: clamp(28px, 6vh, 64px); max-width: 30ch; font-size: 0.86rem; color: var(--muted); text-align: right; }
+.orbit__note { position: absolute; right: var(--gr); bottom: calc(clamp(28px, 6vh, 64px) + var(--bar)); max-width: 30ch; font-size: 0.86rem; color: var(--muted); text-align: right; }
 .orbit__list { display: none; }
 
 /* ---------------- disciplines ---------------- */
@@ -187,11 +191,11 @@ html.gl .hero__fallback { visibility: hidden; }
 
 /* ---------------- vision ---------------- */
 .vision { background: var(--bg); --vx: 72%; --vy: 48%; }
-.vision__pin { position: relative; height: 100vh; height: 100svh; min-height: 560px; overflow: hidden; }
+.vision__pin { position: relative; height: 100vh; height: 100lvh; min-height: 560px; overflow: hidden; }
 .vision__img { position: absolute; inset: 0; clip-path: circle(var(--vr, 150vmax) at var(--vx) var(--vy)); }
 .vision__img img { width: 100%; height: 100%; object-fit: cover; }
 .vision__img::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(12,10,8,0.75) 0%, rgba(12,10,8,0.25) 60%, rgba(12,10,8,0.1) 100%); }
-.vision__quote { position: absolute; left: var(--gl); bottom: clamp(48px, 12vh, 120px); max-width: 21ch; font-family: var(--f-d); font-size: clamp(2rem, 4.4vw, 4.8rem); line-height: 1.04; letter-spacing: -0.02em; }
+.vision__quote { position: absolute; left: var(--gl); bottom: calc(clamp(48px, 12vh, 120px) + var(--bar)); max-width: 21ch; font-family: var(--f-d); font-size: clamp(2rem, 4.4vw, 4.8rem); line-height: 1.04; letter-spacing: -0.02em; }
 .vision__quote .sw { opacity: 0.2; }
 .vision__eyebrow { position: absolute; top: clamp(84px, 12vh, 120px); left: var(--gl); }
 .vision__body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: clamp(32px, 6vw, 120px); padding: clamp(90px, 15vh, 170px) var(--gr) clamp(110px, 18vh, 200px) var(--gl); max-width: 1700px; margin: 0 auto; }

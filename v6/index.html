@@ -1,0 +1,346 @@
+<!doctype html>
+<!--
+  DORR — Version 6 · concept note
+
+  Reference (and the only one): Son Daven by The First The Last — a Carpathian place-story told in
+  two colours (sand on deep umber), with photographs woven out of vertical loom threads, sharp
+  all-caps serif headlines over wide tracked captions, sand cards laid over full-bleed renders,
+  and a slow, dusk-lit pacing that lets the place reveal itself.
+
+  What we kept is the spirit, not the surface: the two-tone dusk palette, the craft-as-image idea,
+  the serif/wide-caps pairing, the unhurried rhythm of reveal → statement → card.
+  What makes it DORR: the craft is not weaving but nacre. A pearl (دُر) grows in concentric layers,
+  so every image here is drawn as nacre growth rings — line weight follows the light — and the
+  real photograph surfaces from the centre like a pearl opening ("Nacre" shader, js/nacre.js).
+  The group itself is told the same way: Holding = the grain, Services Company = the inner layers,
+  five brands = pearls on one strand. Mountain light at dusk is the opening landscape; warm rooms,
+  tables, glass and embers carry the rest.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>DORR — Hospitality Group</title>
+  <meta name="description" content="DORR is a hospitality group: a Holding Company, a Services Company with eight departments, and five distinct brands — DADA, SAYAH, DÉJÀ VU, M04 and RANDEZVOU.">
+  <meta name="theme-color" content="#221d19">
+  <meta name="color-scheme" content="dark">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="DORR 6">
+  <link rel="preload" href="../vendor/fonts/newsreader-latin-opsz-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="../vendor/fonts/unbounded-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="img/hero.jpg" as="image">
+  <link rel="stylesheet" href="css/fonts.css">
+  <link rel="stylesheet" href="css/style.css">
+  <script>
+    (function () {
+      var d = document.documentElement;
+      d.classList.add('js');
+      if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) d.classList.add('reduced');
+      else d.classList.add('is-loading');
+      // safety net: never leave the page covered
+      setTimeout(function () { d.classList.remove('is-loading'); }, 6000);
+    })();
+  </script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <!-- loader (only shown with JS + motion) -->
+  <div class="loader" aria-hidden="true">
+    <svg class="loader__rings" viewBox="0 0 200 200">
+      <circle class="loader__pearl" cx="100" cy="100" r="13"/>
+      <circle cx="100" cy="100" r="24"/><circle cx="100" cy="100" r="34"/><circle cx="100" cy="100" r="44"/>
+      <circle cx="100" cy="100" r="54"/><circle cx="100" cy="100" r="64"/><circle cx="100" cy="100" r="74"/>
+      <circle cx="100" cy="100" r="84"/><circle cx="100" cy="100" r="94"/>
+    </svg>
+    <p class="loader__tl label">DORR<br>Hospitality Group</p>
+    <p class="loader__tr label"><span lang="fa">دُر</span> &nbsp;·&nbsp; pearl</p>
+    <p class="loader__bl label">Layer upon layer</p>
+    <p class="loader__br label"><span class="loader__num">000</span></p>
+  </div>
+
+  <!-- header -->
+  <header class="head">
+    <button class="head__menu" type="button" aria-expanded="false" aria-controls="menu"><span class="head__burger" aria-hidden="true"><i></i><i></i></span><span class="head__menu-label">Menu</span></button>
+    <a class="head__logo" href="#top" aria-label="DORR — back to the top">DORR</a>
+    <a class="pill pill--sm head__cta" href="#contact">Contact</a>
+  </header>
+
+  <!-- menu -->
+  <div class="menu" id="menu" role="dialog" aria-modal="true" aria-label="Site menu" hidden>
+    <div class="menu__inner">
+      <nav class="menu__nav" aria-label="Sections">
+        <ol>
+          <li><a href="#prologue"><span class="menu__num">01</span><span class="menu__txt">Prologue</span></a></li>
+          <li><a href="#group"><span class="menu__num">02</span><span class="menu__txt">The Group</span></a></li>
+          <li><a href="#structure"><span class="menu__num">03</span><span class="menu__txt">Structure</span></a></li>
+          <li><a href="#services"><span class="menu__num">04</span><span class="menu__txt">Services</span></a></li>
+          <li><a href="#brands"><span class="menu__num">05</span><span class="menu__txt">The Brands</span></a></li>
+          <li><a href="#vision"><span class="menu__num">06</span><span class="menu__txt">Vision</span></a></li>
+          <li><a href="#contact"><span class="menu__num">07</span><span class="menu__txt">Contact</span></a></li>
+        </ol>
+      </nav>
+      <div class="menu__aside">
+        <svg class="menu__rings" viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="16"/><circle cx="100" cy="100" r="34"/><circle cx="100" cy="100" r="52"/><circle cx="100" cy="100" r="70"/><circle cx="100" cy="100" r="88"/></svg>
+        <p class="label">DORR Hospitality Group</p>
+        <a class="menu__mail" href="mailto:hello@dorr.example">hello@dorr.example</a>
+      </div>
+    </div>
+  </div>
+
+  <main id="main">
+
+    <!-- HERO -->
+    <section class="hero" id="top" aria-labelledby="hero-title">
+      <div class="hero__media">
+        <img class="hero__img" src="img/hero.jpg" width="2000" height="1250" alt="Layered mountain ridges under a low sun on a hazy horizon" fetchpriority="high" decoding="async">
+        <canvas class="hero__gl" aria-hidden="true"></canvas>
+      </div>
+      <div class="hero__veil" aria-hidden="true"></div>
+      <div class="hero__top">
+        <p class="label">Hospitality Group</p>
+        <p class="label hero__meaning"><span lang="fa">دُر</span><span class="hero__dash"></span>a pearl</p>
+        <p class="label hero__meta">Holding · Services · Five brands</p>
+      </div>
+      <div class="hero__foot">
+        <p class="hero__line"><span>Layer upon layer,</span> <em>a pearl is made.</em></p>
+        <a class="hero__cue label" href="#prologue">Scroll <span class="hero__cue-line" aria-hidden="true"><i></i></span></a>
+      </div>
+      <h1 class="hero__title" id="hero-title"><span class="sr-only">DORR Hospitality Group</span><span class="hero__word" aria-hidden="true"><span>D</span><span>O</span><span>R</span><span>R</span></span></h1>
+    </section>
+
+    <!-- PROLOGUE -->
+    <section class="prologue" id="prologue" aria-labelledby="prologue-title">
+      <figure class="prologue__fig prologue__fig--a" data-reveal-img>
+        <div class="arch"><img src="img/plate.jpg" width="1200" height="1500" alt="A chef carrying a plated dish out of the dark" loading="lazy" decoding="async"></div>
+      </figure>
+      <div class="prologue__body">
+        <p class="orn" id="prologue-title"><span class="orn__dots" aria-hidden="true"></span>Prologue<span class="orn__dots" aria-hidden="true"></span></p>
+        <p class="statement" data-words>Many businesses, each with a distinct identity <em>—</em> sharing one vision for growth, excellence and long&#8209;term sustainability.</p>
+        <a class="pill" href="#group">Discover the Group</a>
+      </div>
+      <figure class="prologue__fig prologue__fig--b" data-reveal-img>
+        <div class="arch"><img src="img/shell.jpg" width="1040" height="1300" alt="A shard of mother-of-pearl among dark stones and shells" loading="lazy" decoding="async"></div>
+      </figure>
+    </section>
+
+    <!-- THE GROUP / INTRODUCTION -->
+    <section class="group sand" id="group" data-theme="light" aria-labelledby="group-title">
+      <div class="group__head">
+        <p class="label">01 — Introduction</p>
+        <h2 class="h2" id="group-title" data-split>Distinct characters, <em>one</em> clear structure.</h2>
+      </div>
+      <div class="group__text" data-fade>
+        <p class="lead">As the Group continues to expand its portfolio of hospitality concepts, the need for a clear organizational structure and an integrated operating model has become increasingly important. The Group currently manages multiple businesses with distinct identities and operational requirements, while sharing a common vision for growth, excellence, and long-term sustainability.</p>
+        <p>Through the creation of a dedicated Services Company operating under the guidance of the Holding Company, the Group is able to leverage shared expertise while preserving the individuality and entrepreneurial spirit of each brand.</p>
+      </div>
+      <figure class="group__fig" data-reveal-img>
+        <div class="arch arch--tall"><img src="img/table.jpg" width="1200" height="1500" alt="Tealights and sprigs in glass bottles on a long table against a warm wall" loading="lazy" decoding="async"></div>
+        <figcaption class="group__quote"><span class="group__quote-mark" aria-hidden="true">“</span><span>The shell protects. <em>The pearl shines.</em></span></figcaption>
+      </figure>
+      <div class="group__aims">
+        <p class="label">The structure is designed to</p>
+        <ol class="aims">
+          <li data-row><span class="aims__n">i.</span><span class="aims__t">Centralize specialized services</span></li>
+          <li data-row><span class="aims__n">ii.</span><span class="aims__t">Improve operational efficiency</span></li>
+          <li data-row><span class="aims__n">iii.</span><span class="aims__t">Enhance collaboration between entities</span></li>
+          <li data-row><span class="aims__n">iv.</span><span class="aims__t">Establish a scalable foundation for future expansion</span></li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- STRUCTURE (sticky scene) -->
+    <section class="structure" id="structure" aria-labelledby="structure-title">
+      <div class="structure__stage">
+        <div class="structure__head">
+          <p class="label">02 — Structure</p>
+          <h2 class="structure__title" id="structure-title"><span class="sl">Layer</span> <span class="sl sl--b"><em>upon</em></span> <span class="sl sl--c">layer</span></h2>
+        </div>
+
+        <div class="nacre" aria-hidden="true">
+          <svg class="nacre__svg" viewBox="-300 -300 600 600">
+            <defs><radialGradient id="pearlGrad" cx="38%" cy="34%" r="70%"><stop offset="0" stop-color="#fbf7ef"/><stop offset=".55" stop-color="#e3d6bf"/><stop offset="1" stop-color="#a88f69"/></radialGradient></defs>
+            <g class="nacre__guides">
+              <circle r="60"/><circle r="150"/><circle r="250"/>
+            </g>
+            <g class="nacre__ring nacre__ring--1"><circle r="150" pathLength="1"/></g>
+            <g class="nacre__ring nacre__ring--2"><circle r="250" pathLength="1"/></g>
+            <g class="nacre__deps"><circle cx="0.0" cy="-150.0" r="7"/><circle cx="106.1" cy="-106.1" r="7"/><circle cx="150.0" cy="0.0" r="7"/><circle cx="106.1" cy="106.1" r="7"/><circle cx="0.0" cy="150.0" r="7"/><circle cx="-106.1" cy="106.1" r="7"/><circle cx="-150.0" cy="0.0" r="7"/><circle cx="-106.1" cy="-106.1" r="7"/></g>
+            <g class="nacre__brands"><circle cx="0.0" cy="-250.0" r="17"/><circle cx="237.8" cy="-77.3" r="17"/><circle cx="146.9" cy="202.3" r="17"/><circle cx="-146.9" cy="202.3" r="17"/><circle cx="-237.8" cy="-77.3" r="17"/></g>
+            <circle class="nacre__core" r="46"/>
+          </svg>
+          <div class="nacre__tags"><span class="nacre__tag nacre__tag--b nacre__tag--t" style="left:50.00%;top:8.33%">DADA</span><span class="nacre__tag nacre__tag--b nacre__tag--r" style="left:89.63%;top:37.13%">SAYAH</span><span class="nacre__tag nacre__tag--b nacre__tag--b2" style="left:74.49%;top:83.71%">DÉJÀ VU</span><span class="nacre__tag nacre__tag--b nacre__tag--b2" style="left:25.51%;top:83.71%">M04</span><span class="nacre__tag nacre__tag--b nacre__tag--l" style="left:10.37%;top:37.13%">RANDEZVOU</span><span class="nacre__tag nacre__tag--core" style="left:50%;top:50%">Holding</span></div>
+        </div>
+
+        <ol class="steps">
+          <li class="step is-active" data-step="0">
+            <p class="step__n">01</p>
+            <h3 class="step__t">Holding Company</h3>
+            <p class="step__d">Sets the strategic direction and governance of the Group.</p>
+          </li>
+          <li class="step" data-step="1">
+            <p class="step__n">08</p>
+            <h3 class="step__t">Services Company</h3>
+            <p class="step__d">Eight departments of specialized services, operating under the guidance of the Holding Company.</p>
+          </li>
+          <li class="step" data-step="2">
+            <p class="step__n">05</p>
+            <h3 class="step__t">Five brands</h3>
+            <p class="step__d">DADA Restaurant · SAYAH Beachclub · DÉJÀ VU · M04 · RANDEZVOU — each keeping its own identity and spirit.</p>
+          </li>
+        </ol>
+        <div class="structure__bar" aria-hidden="true"><i></i></div>
+      </div>
+    </section>
+
+    <!-- SERVICES -->
+    <section class="services" id="services" aria-labelledby="services-title">
+      <div class="services__aside">
+        <p class="label">03 — The Services Company</p>
+        <h2 class="h2" id="services-title" data-split>Shared <em>expertise</em></h2>
+        <p class="services__intro" data-fade>One dedicated company, working under the guidance of the Holding Company, so every brand can lean on the same specialized services.</p>
+        <div class="dial" aria-hidden="true">
+          <svg class="dial__svg" viewBox="0 0 200 200"><circle class="dial__track" cx="100" cy="100" r="96"/><circle class="dial__arc" cx="100" cy="100" r="96" pathLength="1"/></svg>
+          <div class="dial__img"><img src="img/chef.jpg" width="1400" height="1750" alt="" loading="lazy" decoding="async"></div>
+          <p class="dial__num"><span class="dial__cur">01</span><span class="dial__of">/ 08</span></p>
+        </div>
+      </div>
+      <ol class="deps">
+        <li class="dep"><span class="dep__n">01</span><span class="dep__t">Culinary <em>&amp;</em> Beverage</span></li>
+        <li class="dep"><span class="dep__n">02</span><span class="dep__t">Creative <em>&amp;</em> Experience</span></li>
+        <li class="dep"><span class="dep__n">03</span><span class="dep__t">Marketing <em>&amp;</em> CRM</span></li>
+        <li class="dep"><span class="dep__n">04</span><span class="dep__t">People <em>&amp;</em> Culture</span></li>
+        <li class="dep"><span class="dep__n">05</span><span class="dep__t">Operations Excellence</span></li>
+        <li class="dep"><span class="dep__n">06</span><span class="dep__t">Project Development <em>&amp;</em> Opening</span></li>
+        <li class="dep"><span class="dep__n">07</span><span class="dep__t">Procurement <em>&amp;</em> Supply Chain</span></li>
+        <li class="dep"><span class="dep__n">08</span><span class="dep__t">Technology, Data <em>&amp;</em> Systems</span></li>
+      </ol>
+    </section>
+
+    <!-- BRANDS (horizontal strand) -->
+    <section class="brands" id="brands" aria-labelledby="brands-title">
+      <div class="brands__stage">
+        <div class="brands__track">
+          <div class="brands__intro">
+            <p class="label">04 — The Brands</p>
+            <h2 class="brands__title" id="brands-title">Five pearls, <em>one strand</em></h2>
+            <p class="brands__note">Distinct identities and operational requirements, strung on one common vision.</p>
+            <p class="label brands__hint" aria-hidden="true">Keep scrolling <span class="brands__arrow">→</span></p>
+          </div>
+          <ol class="brands__list">
+            <li class="brand">
+              <figure class="brand__fig"><img src="img/dada.jpg" width="1300" height="1625" alt="A long wooden table set by candlelight in a dark dining room" loading="lazy" decoding="async"></figure>
+              <div class="brand__meta"><span class="brand__n">01 / 05</span><span class="brand__k">Restaurant</span></div>
+              <h3 class="brand__name">DADA</h3>
+            </li>
+            <li class="brand">
+              <figure class="brand__fig"><img src="img/sayah.jpg" width="1300" height="1625" alt="Silhouettes gathered on a beach under palms at sunset" loading="lazy" decoding="async"></figure>
+              <div class="brand__meta"><span class="brand__n">02 / 05</span><span class="brand__k">Beachclub</span></div>
+              <h3 class="brand__name">SAYAH</h3>
+            </li>
+            <li class="brand">
+              <figure class="brand__fig"><img src="img/dejavu.jpg" width="1300" height="1625" alt="A coupe cocktail on a marble bar in warm low light" loading="lazy" decoding="async"></figure>
+              <div class="brand__meta"><span class="brand__n">03 / 05</span><span class="brand__k">DORR Group</span></div>
+              <h3 class="brand__name">DÉJÀ&nbsp;VU</h3>
+            </li>
+            <li class="brand">
+              <figure class="brand__fig"><img src="img/m04.jpg" width="1300" height="1625" alt="A dim bar with a lit counter and empty stools" loading="lazy" decoding="async"></figure>
+              <div class="brand__meta"><span class="brand__n">04 / 05</span><span class="brand__k">DORR Group</span></div>
+              <h3 class="brand__name">M04</h3>
+            </li>
+            <li class="brand">
+              <figure class="brand__fig"><img src="img/randezvou.jpg" width="1300" height="1625" alt="Champagne being poured into coupes by candlelight" loading="lazy" decoding="async"></figure>
+              <div class="brand__meta"><span class="brand__n">05 / 05</span><span class="brand__k">DORR Group</span></div>
+              <h3 class="brand__name">RANDEZVOU</h3>
+            </li>
+          </ol>
+        </div>
+        <div class="strand" aria-hidden="true"><span class="strand__line"></span><span class="strand__pearl"></span></div>
+      </div>
+    </section>
+
+    <!-- VISION -->
+    <section class="vision" id="vision" aria-labelledby="vision-title">
+      <div class="vision__stage">
+        <div class="vision__window">
+          <img src="img/ridges.jpg" width="2000" height="1250" alt="Layered mountain ridges fading into a warm haze" loading="lazy" decoding="async">
+        </div>
+        <div class="vision__head">
+          <p class="label">05 — Future Vision</p>
+          <h2 class="vision__title" id="vision-title"><span class="vl">Future</span> <span class="vl vl--b"><em>vision</em></span></h2>
+        </div>
+      </div>
+      <div class="vision__body">
+        <p class="vision__lead" data-words>New hospitality concepts, restaurant brands and complementary ventures, integrated within a unified governance framework.</p>
+        <div class="vision__cols" data-fade>
+          <p>The organizational structure has been designed to support both the current portfolio of businesses and future growth opportunities. As the organization expands, new hospitality concepts, restaurant brands, and complementary ventures can be integrated efficiently within a unified governance framework.</p>
+          <p>Through centralized expertise, disciplined oversight, and shared resources, the Group seeks to build a resilient and scalable organization capable of adapting to evolving market conditions while maintaining consistent standards across its portfolio.</p>
+          <p>As the platform matures, the Group may evaluate opportunities to extend selected capabilities beyond its internal portfolio, where such initiatives align with its long-term vision and create additional shareholder value.</p>
+        </div>
+        <blockquote class="vision__close" data-fade>
+          <p>Ultimately, the vision is a diversified ecosystem of hospitality brands operating under a unified strategic direction, <em>while preserving the distinctive identity and character of each concept.</em></p>
+        </blockquote>
+      </div>
+    </section>
+
+    <!-- MARQUEE -->
+    <div class="marquee" aria-hidden="true">
+      <div class="marquee__track">
+        <span>DADA</span><i></i><span><em>SAYAH</em></span><i></i><span>DÉJÀ VU</span><i></i><span><em>M04</em></span><i></i><span>RANDEZVOU</span><i></i>
+        <span>DADA</span><i></i><span><em>SAYAH</em></span><i></i><span>DÉJÀ VU</span><i></i><span><em>M04</em></span><i></i><span>RANDEZVOU</span><i></i>
+      </div>
+    </div>
+
+    <!-- CONTACT -->
+    <section class="contact" id="contact" aria-labelledby="contact-title">
+      <div class="contact__bg"><img src="img/embers.jpg" width="2000" height="1250" alt="" loading="lazy" decoding="async"></div>
+      <div class="contact__card sand" data-theme="light">
+        <p class="orn orn--ink"><span class="orn__dots" aria-hidden="true"></span>Contact<span class="orn__dots" aria-hidden="true"></span></p>
+        <h2 class="contact__title" id="contact-title">Write to <em>DORR</em></h2>
+        <p class="contact__text">For partnerships, new concepts and opportunities across the DORR Group.</p>
+        <p class="mail"><a class="mail__link" href="mailto:hello@dorr.example">hello@dorr.example</a><button class="mail__copy" type="button" data-copy="hello@dorr.example">Copy</button></p>
+        <form class="form" novalidate>
+          <div class="field"><label for="f-name">Name</label><input id="f-name" name="name" type="text" autocomplete="name" required></div>
+          <div class="field"><label for="f-email">Email</label><input id="f-email" name="email" type="email" autocomplete="email" required></div>
+          <div class="field field--wide"><label for="f-msg">Message</label><textarea id="f-msg" name="message" rows="3"></textarea></div>
+          <div class="form__row">
+            <button class="pill pill--ink" type="submit">Send</button>
+            <p class="form__note" role="status" aria-live="polite"></p>
+          </div>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <div class="foot__grid">
+      <nav class="foot__nav" aria-label="Footer">
+        <a href="#group">The Group</a><a href="#structure">Structure</a><a href="#services">Services</a><a href="#brands">Brands</a><a href="#vision">Vision</a><a href="#contact">Contact</a>
+      </nav>
+      <p class="foot__brands label">DADA · SAYAH · DÉJÀ VU · M04 · RANDEZVOU</p>
+      <a class="foot__top label" href="#top">Back to the top ↑</a>
+    </div>
+    <p class="foot__word" aria-hidden="true"><span>D</span><span>O</span><span>R</span><span>R</span></p>
+    <div class="foot__base">
+      <p>© 2026 DORR Hospitality Group</p>
+      <p class="foot__credits">Atmospheric photography via Unsplash — Thierry Lemaitre, Tommaso Ubezio, Nicole Almendrada, Annie Spratt, Urban Gyllström, Toa Heftiba, Hyukjoon Sohn, Ambitious Studio* | Rick Barrett, Andrea De Santis, Taylor Friehl, Christian Lue, Saxon White.</p>
+    </div>
+  </footer>
+
+  <div class="grain" aria-hidden="true"></div>
+
+  <script src="../vendor/js/gsap.min.js" defer></script>
+  <script src="../vendor/js/ScrollTrigger.min.js" defer></script>
+  <script src="../vendor/js/lenis.min.js" defer></script>
+  <script src="js/nacre.js" defer></script>
+  <script src="js/main.js" defer></script>
+  <script>
+    if ('serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+  </script>
+</body>
+</html>

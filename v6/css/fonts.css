@@ -1,0 +1,22 @@
+/* DORR v6 — local fonts only (fontsource woff2, SIL Open Font License) */
+@font-face {
+  font-family: "Newsreader";
+  src: url("../../vendor/fonts/newsreader-latin-opsz-normal.woff2") format("woff2");
+  font-weight: 200 800;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Newsreader";
+  src: url("../../vendor/fonts/newsreader-latin-opsz-italic.woff2") format("woff2");
+  font-weight: 200 800;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Unbounded";
+  src: url("../../vendor/fonts/unbounded-latin-wght-normal.woff2") format("woff2");
+  font-weight: 200 900;
+  font-style: normal;
+  font-display: swap;
+}

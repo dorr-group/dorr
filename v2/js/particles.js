@@ -1,6 +1,8 @@
 /* DORR v2 — gold particle field (three.js, orthographic, pixel units).
    Each particle has three homes: scattered dust, a point on the DORR wordmark,
-   and a point on the ring. GSAP drives `state`; the shader blends between homes. */
+   and a point on the ring. GSAP drives `state`; the shader blends between homes.
+   opts.ticker (gsap.ticker) drives rendering so the page has a single frame loop;
+   the owner calls resize() once layout has settled (ScrollTrigger refresh). */
 window.DorrParticles = function (canvas, opts) {
   const THREE = window.THREE;
   if (!THREE) return null;
@@ -11,7 +13,11 @@ window.DorrParticles = function (canvas, opts) {
   } catch (e) {
     return null;
   }
-  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const coarse = window.matchMedia('(pointer: coarse)').matches;
+  const lowEnd = (navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory || 8) <= 4;
+  // capped pixel ratio: soft gold dust gains nothing from 3x buffers, phones pay for it in heat
+  const pixelRatio = () => Math.min(window.devicePixelRatio || 1, coarse || window.innerWidth < 700 ? 1.5 : 1.75);
+  let dpr = pixelRatio();
   renderer.setPixelRatio(dpr);
   renderer.setClearColor(0x000000, 0);
 
@@ -21,7 +27,8 @@ window.DorrParticles = function (canvas, opts) {
   const state = { intro: 0, morph: 0, scale: 1, alpha: 1 };
   let W = 0, H = 0, count = 0, ringR = 0;
   let points = null;
-  const mouse = { x: 9999, y: 9999, tx: 9999, ty: 9999 };
+  // cursor: position eases toward the pointer, strength k fades in/out (no sweep in from off-screen)
+  const mouse = { x: 0, y: 0, tx: 0, ty: 0, k: 0, tk: 0, cx: 0, cy: 0, dirty: false };
 
   const vertex = `
     attribute vec3 aWord;
@@ -30,7 +37,7 @@ window.DorrParticles = function (canvas, opts) {
     attribute float aRand;
     uniform float uTime, uIntro, uMorph, uScale, uSize;
     uniform vec2 uMouse;
-    uniform float uMouseR;
+    uniform float uMouseR, uMouseK;
     varying float vRand;
     varying float vGlow;
     void main() {
@@ -53,7 +60,7 @@ window.DorrParticles = function (canvas, opts) {
       // cursor pushes particles away
       vec2 d = p.xy - uMouse;
       float dist = length(d);
-      float f = smoothstep(uMouseR, 0.0, dist);
+      float f = smoothstep(uMouseR, 0.0, dist) * uMouseK;
       p.xy += (d / max(dist, 0.001)) * f * 70.0 * t;
 
       vGlow = f;
@@ -80,8 +87,8 @@ window.DorrParticles = function (canvas, opts) {
 
   const uniforms = {
     uTime: { value: 0 }, uIntro: { value: 0 }, uMorph: { value: 0 }, uScale: { value: 1 },
-    uSize: { value: 2.3 * dpr }, uMouse: { value: new THREE.Vector2(9999, 9999) },
-    uMouseR: { value: 130 }, uAlpha: { value: 1 },
+    uSize: { value: 2.3 * dpr }, uMouse: { value: new THREE.Vector2(0, 0) },
+    uMouseR: { value: 130 }, uMouseK: { value: 0 }, uAlpha: { value: 1 },
   };
 
   const sampleWord = (n) => {
@@ -138,15 +145,16 @@ window.DorrParticles = function (canvas, opts) {
     return out;
   };
 
-  const build = () => {
-    const rect = canvas.getBoundingClientRect();
-    W = Math.max(1, Math.round(rect.width));
-    H = Math.max(1, Math.round(rect.height));
+  const build = (w, h) => {
+    W = w; H = h;
+    dpr = pixelRatio();
+    renderer.setPixelRatio(dpr);
+    uniforms.uSize.value = 2.3 * dpr;
     renderer.setSize(W, H, false);
     camera.left = -W / 2; camera.right = W / 2; camera.top = H / 2; camera.bottom = -H / 2;
     camera.updateProjectionMatrix();
     ringR = opts.ringRadius(W, H);
-    count = W < 700 ? 9000 : 22000;
+    count = Math.round((W < 700 ? 9000 : 22000) * (lowEnd ? 0.6 : 1));
 
     const geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(count * 3), 3));
@@ -169,47 +177,82 @@ window.DorrParticles = function (canvas, opts) {
     scene.add(points);
   };
 
-  let running = false, raf = 0, last = performance.now();
-  const tick = (now) => {
+  const ticker = opts.ticker || null;
+  let running = false, raf = 0, last = performance.now(), blank = false;
+  const tick = () => {
     if (!running) return;
+    if (!ticker) raf = requestAnimationFrame(tick);
+    const now = performance.now();
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
+    // fully faded out (end of the hero scroll): clear once, then skip the GPU work
+    if (state.alpha <= 0.002) {
+      if (!blank) { renderer.clear(); blank = true; }
+      return;
+    }
+    blank = false;
     uniforms.uTime.value += dt;
-    mouse.x += (mouse.tx - mouse.x) * 0.12;
-    mouse.y += (mouse.ty - mouse.y) * 0.12;
+    if (mouse.dirty) {
+      // at most one layout read per frame, and only while the pointer moves
+      const r = canvas.getBoundingClientRect();
+      mouse.tx = mouse.cx - r.left - W / 2;
+      mouse.ty = -(mouse.cy - r.top - H / 2);
+      if (mouse.k < 0.01) { mouse.x = mouse.tx; mouse.y = mouse.ty; }
+      mouse.dirty = false;
+    }
+    const ease = 1 - Math.exp(-dt * 8);
+    mouse.x += (mouse.tx - mouse.x) * ease;
+    mouse.y += (mouse.ty - mouse.y) * ease;
+    mouse.k += (mouse.tk - mouse.k) * (1 - Math.exp(-dt * 4));
     uniforms.uMouse.value.set(mouse.x, mouse.y);
+    uniforms.uMouseK.value = mouse.k;
     uniforms.uIntro.value = state.intro;
     uniforms.uMorph.value = state.morph;
     uniforms.uScale.value = state.scale;
     uniforms.uAlpha.value = state.alpha;
     renderer.render(scene, camera);
-    raf = requestAnimationFrame(tick);
   };
 
+  // mouse/pen only: on touch the push would follow a scrolling finger and stay stuck where it lifted
   const onMove = (e) => {
-    const r = canvas.getBoundingClientRect();
-    mouse.tx = e.clientX - r.left - W / 2;
-    mouse.ty = -(e.clientY - r.top - H / 2);
+    if (!running || e.pointerType === 'touch') return;
+    mouse.cx = e.clientX; mouse.cy = e.clientY; mouse.dirty = true; mouse.tk = 1;
   };
-  const onLeave = () => { mouse.tx = 9999; mouse.ty = 9999; };
+  const onLeave = () => { mouse.tk = 0; };
   window.addEventListener('pointermove', onMove, { passive: true });
   document.addEventListener('pointerleave', onLeave);
+  window.addEventListener('blur', onLeave);
 
-  let resizeTimer = 0;
-  window.addEventListener('resize', () => {
-    clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(() => {
-      const r = canvas.getBoundingClientRect();
-      if (Math.abs(r.width - W) > 2 || Math.abs(r.height - H) > 80) build();
-    }, 200);
-  });
+  const measure = () => {
+    const r = canvas.getBoundingClientRect();
+    return [Math.max(1, Math.round(r.width)), Math.max(1, Math.round(r.height))];
+  };
+  // Rebuilds only on a real size change. On touch screens a height-only change is the
+  // address bar showing or hiding, so it is ignored (re-sampling would make the dust jump).
+  const resize = () => {
+    const [w, h] = measure();
+    const widthChanged = Math.abs(w - W) > 2;
+    const heightChanged = Math.abs(h - H) > 2;
+    if (!widthChanged && (coarse || !heightChanged)) return false;
+    build(w, h);
+    return true;
+  };
 
-  build();
+  build(...measure());
 
   return {
     state,
     ringRadius: () => ringR,
-    start() { if (running) return; running = true; last = performance.now(); raf = requestAnimationFrame(tick); },
-    stop() { running = false; cancelAnimationFrame(raf); },
+    size: () => [W, H],
+    resize,
+    start() {
+      if (running) return;
+      running = true; last = performance.now();
+      if (ticker) ticker.add(tick); else raf = requestAnimationFrame(tick);
+    },
+    stop() {
+      running = false;
+      if (ticker) ticker.remove(tick); else cancelAnimationFrame(raf);
+    },
   };
 };
