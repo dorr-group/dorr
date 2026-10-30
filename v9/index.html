@@ -1,0 +1,436 @@
+<!doctype html>
+<!--
+  DORR — Version 9 · "A day, held still"
+  Written from scratch for v9. English only.
+
+  Aman qualities we share
+  - Restraint: very little on screen at once, vast negative space, nothing shouts.
+  - A slow, natural-light brand film as the first thing you see; long held shots, gentle dissolves, optional ambient sound that starts off.
+  - A muted natural palette (linen, sand, stone, ink) and a soft, warm photographic grade.
+  - Small refined serif for headlines and reading, small widely spaced capitals for labels.
+  - Editorial photography of light, shadow and texture; spaces and people shown quietly, from behind or in silhouette.
+  - Slow cross-fades and unhurried scrolling; generous vertical pacing between chapters.
+  - The wordmark centred at the top of the page.
+
+  Originality checklist (Aman signature → what v9 does instead)
+  - Thin geometric wordmark with a macron over the A → DORR set in a spaced old-style serif with a small pearl beneath it.
+  - Header with "Menu" + search on the left and language selector + dark "Reserve" button on the right, plus a property sub-navigation bar → "Index" on the left, a plain "Write to us" text link on the right; no booking button, search, language selector or sub-nav.
+  - Film framed inside page margins in a third-party player with a control bar → self-hosted film running fully edge to edge, with only two tiny text controls (sound, pause).
+  - Lyon serif + Whitney sans → EB Garamond + Albert Sans.
+  - Staggered image carousels and teaser cards ("Discover more") → no carousels or cards at all; tiered lists, a two-column index of disciplines and alternating brand rows.
+  - Section order film → intro → gallery → accommodation → offers → map/getting here → nearby properties → film → statement → structure → disciplines → five brands → dusk interlude → future vision (night band) → contact.
+  - Linen on every band → the page moves through the day: linen morning bands, a warm dusk interlude and an ink "night" band.
+  - Cookie modal, sticky mobile "Reserve" bar, destination mega-menu → none.
+  - Aman text, footage, logo and audio → DORR's own text (from the v4 brief), stock footage from Pexels and Mixkit, a Mixkit track; credits below and in the footer.
+
+  Film + sound credits (all free licences allowing commercial use and modification)
+  Pexels licence: https://www.pexels.com/license/  ·  Mixkit Stock Video Free License / Mixkit Stock Music & SFX Free License: https://mixkit.co/license/
+  - Misty coast at dawn — Mixkit — https://mixkit.co/free-stock-video/foggy-ocean-landscape-1089/
+  - Sunlit curtain with tree shadows — Greg Benson / Pexels — https://www.pexels.com/video/soft-sunlit-curtain-with-tree-shadows-35161057/
+  - Woman carrying flowers by the window — ROMAN ODINTSOV / Pexels — https://www.pexels.com/video/woman-carrying-a-potted-plant-8331930/
+  - Indoor pool with glass ceiling — Cá Bảo / Pexels — https://www.pexels.com/video/elegant-indoor-pool-with-glass-ceiling-39958167/
+  - Tea poured through a strainer — Ivan S / Pexels — https://www.pexels.com/video/a-person-pouring-tea-through-a-strainer-8507785/
+  - A table setting — Mikhail Nilov / Pexels — https://www.pexels.com/video/a-table-setting-on-a-wedding-reception-8247208/
+  - Relaxing candlelit room — ROMAN ODINTSOV / Pexels — https://www.pexels.com/video/relaxing-candlelit-room-6813119/
+  - Person swimming in a pool — Mixkit — https://mixkit.co/free-stock-video/person-swimming-in-a-pool-3173/
+  - Shell in the surf — Piotr Wróbel / Pexels — https://www.pexels.com/video/close-up-footage-of-a-shell-in-the-beach-3446608/
+  - Woman in hat in the sea at sunset — Arsel Ozgurdal / Pexels — https://www.pexels.com/video/woman-in-hat-in-sea-at-sunset-14033094/
+  - Woman walking towards the boulders — Mixkit — https://mixkit.co/free-stock-video/woman-walking-on-beach-towards-boulders-1012/
+  - Lantern ceiling (also the interlude clip) — Agung Pandit Wiguna / Pexels — https://www.pexels.com/video/rustic-ceiling-with-ambient-lighting-decor-28675641/
+  - Sunset reflection on the sea — Mixkit — https://mixkit.co/free-stock-video/defocused-view-of-the-sunset-reflection-in-the-sea-34363/
+  - Music: "Rest Now" by Eugenio Mininni — Mixkit — https://mixkit.co/free-stock-music/ (Mixkit Stock Music Free License)
+  - Ambience: "Sea waves ambience" — Mixkit — https://mixkit.co/free-sound-effects/sea/ (Mixkit Sound Effects Free License)
+  Edited, re-timed and colour-graded for DORR. The film slot (#film) can be swapped for another film without touching the layout.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>DORR — Hospitality Group</title>
+<meta name="description" content="DORR is a hospitality group: one Holding Company, one Services Company with eight disciplines, and five brands, each with its own character.">
+<meta name="theme-color" content="#f2ede6">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png" sizes="192x192" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="DORR 9">
+<link rel="preload" href="../vendor/fonts/eb-garamond-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../vendor/fonts/albert-sans-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/fonts.css?v=20261030">
+<link rel="stylesheet" href="css/style.css?v=20261030">
+<script>
+  (function () {
+    var d = document.documentElement;
+    d.classList.add('js');
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!reduce) d.classList.add('motion');
+  })();
+</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<div class="veil" id="veil" aria-hidden="true">
+  <span class="mark veil__mark"><span class="mark__word">DORR</span><span class="mark__pearl"></span></span>
+</div>
+
+<header class="site-header" id="header">
+  <button class="hdr-btn" type="button" id="indexOpen" aria-expanded="false" aria-controls="index">
+    <span class="hdr-btn__lines" aria-hidden="true"></span><span class="caps hdr-link">Index</span>
+  </button>
+  <a class="mark" href="#top" aria-label="DORR, back to the start"><span class="mark__word">DORR</span><span class="mark__pearl" aria-hidden="true"></span></a>
+  <a class="hdr-btn hdr-btn--right" href="#contact" aria-label="Write to us"><span class="caps hdr-link">Write to us</span></a>
+</header>
+
+<nav class="index" id="index" aria-label="Index" aria-hidden="true">
+  <div class="index__top">
+    <button class="hdr-btn" type="button" id="indexClose"><span class="caps hdr-link">Close</span></button>
+    <span class="mark" aria-hidden="true"><span class="mark__word">DORR</span><span class="mark__pearl"></span></span>
+    <span></span>
+  </div>
+  <ol class="index__list">
+    <li><a href="#introduction"><span class="caps">01</span>Introduction</a></li>
+    <li><a href="#structure"><span class="caps">02</span>Structure</a></li>
+    <li><a href="#services"><span class="caps">03</span>The Services Company</a></li>
+    <li><a href="#portfolio"><span class="caps">04</span>The Portfolio</a></li>
+    <li><a href="#vision"><span class="caps">05</span>Future Vision</a></li>
+    <li><a href="#contact"><span class="caps">06</span>Contact</a></li>
+  </ol>
+  <div class="index__foot">
+    <span class="caps label">DORR Hospitality Group</span>
+    <a class="caps label" href="mailto:hello@dorr.example">hello@dorr.example</a>
+  </div>
+</nav>
+
+<main id="main">
+  <!-- ===== Film (swap-ready slot) ===== -->
+  <section class="film" id="top" aria-label="DORR film">
+    <h1 class="sr-only">DORR — Hospitality Group</h1>
+    <div class="film__frame" id="filmFrame">
+      <picture>
+        <source media="(max-width: 700px) and (orientation: portrait)" srcset="media/dorr-film-poster-720.webp" type="image/webp">
+        <source srcset="media/dorr-film-poster.webp" type="image/webp">
+        <img class="film__poster" src="media/dorr-film-poster.jpg" alt="Morning mist rolling over a quiet coastline" fetchpriority="high" decoding="async">
+      </picture>
+      <video id="film" muted autoplay playsinline loop preload="metadata" aria-hidden="true" tabindex="-1"
+        data-desk-webm="media/dorr-film-1920.webm"
+        data-desk-mp4="media/dorr-film-1920.mp4"
+        data-phone-webm="media/dorr-film-720.webm"
+        data-phone-mp4="media/dorr-film-720.mp4"></video>
+      <script>
+        /* pick the film for this screen before the parser moves on (WebM first, MP4 for Safari);
+           reduced motion or Save-Data: keep the poster, no download, offer a play button */
+        (function () {
+          var v = document.getElementById('film');
+          var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+          var c = navigator.connection || {};
+          var save = c.saveData === true || /(^|-)2g$/.test(c.effectiveType || '');
+          if (reduce || save) {
+            v.removeAttribute('autoplay'); v.autoplay = false; v.preload = 'none';
+            v.setAttribute('data-still', reduce ? 'motion' : 'data');
+            return;
+          }
+          var phone = window.matchMedia('(max-width: 700px) and (orientation: portrait)').matches;
+          var list = phone ? [[v.dataset.phoneWebm, 'video/webm'], [v.dataset.phoneMp4, 'video/mp4']]
+                           : [[v.dataset.deskWebm, 'video/webm'], [v.dataset.deskMp4, 'video/mp4']];
+          v.muted = true; v.defaultMuted = true;
+          list.forEach(function (it) { var s = document.createElement('source'); s.src = it[0]; s.type = it[1]; v.appendChild(s); });
+        })();
+      </script>
+    </div>
+    <div class="film__shade" aria-hidden="true"></div>
+    <div class="film__caption">
+      <span class="caps">DORR &nbsp;·&nbsp; Hospitality Group</span>
+      <span class="film__cue" aria-hidden="true"></span>
+    </div>
+    <button class="film__play caps" type="button" id="filmPlay"><span class="ctl__icon" aria-hidden="true" style="border-left:8px solid currentColor;border-top:5px solid transparent;border-bottom:5px solid transparent;width:0;height:0"></span>Play the film</button>
+    <div class="film__controls">
+      <button class="ctl caps" type="button" id="soundToggle" aria-pressed="false">
+        <span class="ctl__bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="ctl__label">Sound off</span>
+      </button>
+      <button class="ctl caps" type="button" id="filmToggle" aria-pressed="false">
+        <span class="ctl__icon" aria-hidden="true"></span><span class="ctl__label">Pause</span>
+      </button>
+    </div>
+    <audio id="ambience" loop preload="none" src="media/dorr-ambience.m4a"></audio>
+  </section>
+
+  <!-- ===== 01 Introduction ===== -->
+  <section class="band statement" id="introduction" aria-labelledby="intro-title">
+    <div class="wrap">
+      <p class="chapter-no" data-reveal="fade">01 &nbsp; Introduction</p>
+      <h2 class="display" id="intro-title" data-reveal>The shell protects.<br><em>The pearl shines.</em></h2>
+      <div class="statement__rule" data-rule aria-hidden="true"></div>
+      <div class="statement__body">
+        <p class="lede" data-reveal>As the Group expands its portfolio of hospitality concepts, DORR brings every brand into one clear organizational structure and an integrated operating model, sharing expertise while preserving the individuality and entrepreneurial spirit of each.</p>
+        <p data-reveal>As the Group continues to expand its portfolio of hospitality concepts, the need for a clear organizational structure and an integrated operating model has become increasingly important. The Group currently manages multiple businesses with distinct identities and operational requirements, while sharing a common vision for growth, excellence, and long-term sustainability.</p>
+        <p data-reveal>Through the creation of a dedicated Services Company operating under the guidance of the Holding Company, the Group is able to leverage shared expertise while preserving the individuality and entrepreneurial spirit of each brand. The structure is designed to centralize specialized services, improve operational efficiency, enhance collaboration between entities, and establish a scalable foundation for future expansion.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 02 Structure ===== -->
+  <section class="band band--sand" id="structure" aria-labelledby="structure-title">
+    <div class="wrap structure">
+      <div class="structure__media">
+        <figure>
+          <div class="frame frame--tall" data-parallax>
+            <img src="img/leaf-shadow-stone.webp" width="1000" height="1500" alt="Leaf shadows moving across a pale stone wall" loading="lazy" decoding="async">
+          </div>
+          <figcaption class="caps">Morning, stone and shadow</figcaption>
+        </figure>
+      </div>
+      <div class="structure__text">
+        <span class="caps label" data-reveal="fade">02 &nbsp; Structure</span>
+        <h2 class="title" id="structure-title" data-reveal style="margin-top:26px;max-width:16ch">One Holding. One Services Company. Five brands, each with its own character.</h2>
+        <ol class="tiers">
+          <li class="tier" data-reveal>
+            <span class="tier__no">I</span>
+            <h3>Holding Company</h3>
+            <p>Sets the strategic direction and governance of the Group.</p>
+          </li>
+          <li class="tier" data-reveal>
+            <span class="tier__no">II</span>
+            <h3>Services Company</h3>
+            <p>Eight disciplines, shared by every brand under the guidance of the Holding Company.</p>
+          </li>
+          <li class="tier" data-reveal>
+            <span class="tier__no">III</span>
+            <h3>Five brands</h3>
+            <div class="tier__brands caps"><span>DADA Restaurant</span><span>SAYAH Beachclub</span><span>DÉJÀ VU</span><span>M04</span><span>RANDEZVOU</span></div>
+          </li>
+        </ol>
+        <div class="principles">
+          <span class="caps label" data-reveal="fade">What the shell is for</span>
+          <div data-reveal><h3>Stronger governance</h3><p>Clear oversight across every entity.</p></div>
+          <div data-reveal><h3>Optimized resources</h3><p>Shared expertise, used where it adds most.</p></div>
+          <div data-reveal><h3>Room to innovate</h3><p>A structure that supports new ideas.</p></div>
+          <div data-reveal><h3>Agility &amp; consistency</h3><p>The same standard, everywhere.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 03 Services ===== -->
+  <section class="band" id="services" aria-labelledby="services-title">
+    <div class="wrap services">
+      <div>
+        <span class="caps label" data-reveal="fade">03 &nbsp; The Services Company</span>
+        <h2 class="title" id="services-title" data-reveal>Eight disciplines, <em>one thread.</em></h2>
+        <ol class="disciplines">
+          <li data-reveal><span class="caps">i</span>Culinary &amp; Beverage</li>
+          <li data-reveal><span class="caps">ii</span>Creative &amp; Experience</li>
+          <li data-reveal><span class="caps">iii</span>Marketing &amp; CRM</li>
+          <li data-reveal><span class="caps">iv</span>People &amp; Culture</li>
+          <li data-reveal><span class="caps">v</span>Operations Excellence</li>
+          <li data-reveal><span class="caps">vi</span>Project Development &amp; Opening</li>
+          <li data-reveal><span class="caps">vii</span>Procurement &amp; Supply Chain</li>
+          <li data-reveal><span class="caps">viii</span>Technology, Data &amp; Systems</li>
+        </ol>
+      </div>
+      <figure class="services__media" style="margin:0">
+        <div class="frame frame--port" data-parallax>
+          <img src="img/table-row.webp" width="1200" height="1798" alt="A long row of tables laid with white linen under a colonnade" loading="lazy" decoding="async">
+        </div>
+        <figcaption class="caps">Noon, a table laid in the shade</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ===== 04 Portfolio ===== -->
+  <section class="band band--sand" id="portfolio" aria-labelledby="portfolio-title">
+    <div class="wrap">
+      <div class="portfolio__head">
+        <p class="chapter-no" data-reveal="fade">04 &nbsp; The Portfolio</p>
+        <h2 class="title" id="portfolio-title" data-reveal>Five brands, <em>one pearl.</em></h2>
+      </div>
+      <ol class="brands">
+        <li class="brand">
+          <div class="brand__text" data-reveal>
+            <span class="caps brand__no">01 / 05</span>
+            <h3 class="brand__name">DADA</h3>
+            <span class="caps brand__kind">Restaurant</span>
+            <p class="brand__desc">A distinct dining concept with its own identity, supported by the Group.</p>
+          </div>
+          <div class="brand__media"><div class="frame" data-parallax><img src="img/candle-table.webp" width="1200" height="1812" alt="A single candle on a table laid for dinner" loading="lazy" decoding="async"></div></div>
+        </li>
+        <li class="brand">
+          <div class="brand__text" data-reveal>
+            <span class="caps brand__no">02 / 05</span>
+            <h3 class="brand__name">SAYAH</h3>
+            <span class="caps brand__kind">Beachclub</span>
+            <p class="brand__desc">A beach club with its own rhythm, backed by shared Group expertise.</p>
+          </div>
+          <div class="brand__media"><div class="frame" data-parallax><img src="img/palm-shadow.webp" width="1100" height="1650" alt="The shadow of a palm falling across a warm, sunlit wall" loading="lazy" decoding="async"></div></div>
+        </li>
+        <li class="brand">
+          <div class="brand__text" data-reveal>
+            <span class="caps brand__no">03 / 05</span>
+            <h3 class="brand__name">DÉJÀ VU</h3>
+            <span class="caps brand__kind">Hospitality concept</span>
+            <p class="brand__desc">A DORR hospitality concept.</p>
+          </div>
+          <div class="brand__media"><div class="frame" data-parallax><img src="img/stone-steps.webp" width="1200" height="1874" alt="Worn stone steps leading to a doorway in soft light" loading="lazy" decoding="async"></div></div>
+        </li>
+        <li class="brand brand--wide">
+          <div class="brand__text" data-reveal>
+            <span class="caps brand__no">04 / 05</span>
+            <h3 class="brand__name">M04</h3>
+            <span class="caps brand__kind">Hospitality concept</span>
+            <p class="brand__desc">A DORR hospitality concept.</p>
+          </div>
+          <div class="brand__media"><div class="frame" data-parallax><img src="img/pillar-shadow.webp" width="1800" height="1012" alt="A long shadow cast by a stone pillar across a quiet courtyard" loading="lazy" decoding="async"></div></div>
+        </li>
+        <li class="brand">
+          <div class="brand__text" data-reveal>
+            <span class="caps brand__no">05 / 05</span>
+            <h3 class="brand__name">RANDEZVOU</h3>
+            <span class="caps brand__kind">Hospitality concept</span>
+            <p class="brand__desc">A DORR hospitality concept.</p>
+          </div>
+          <div class="brand__media"><div class="frame" data-parallax><img src="img/gate-shadow.webp" width="1200" height="1600" alt="Tree shadows over a pale wall beside a dark gate" loading="lazy" decoding="async"></div></div>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ===== Dusk interlude (secondary ambient clip) ===== -->
+  <section class="interlude" aria-label="Interlude">
+    <img class="interlude__still" src="media/dorr-dusk-poster.webp" alt="" loading="lazy" decoding="async" data-parallax-inner>
+    <video id="dusk" muted playsinline loop preload="none" aria-hidden="true" tabindex="-1" data-webm="media/dorr-dusk.webm" data-mp4="media/dorr-dusk.mp4" data-parallax-inner></video>
+    <div class="interlude__text">
+      <span class="caps label--light" data-reveal="fade">Dusk</span>
+      <p class="title" data-reveal>Shared expertise. <em>The individuality of each.</em></p>
+    </div>
+  </section>
+
+  <!-- ===== 05 Future Vision ===== -->
+  <section class="band band--ink" id="vision" aria-labelledby="vision-title">
+    <div class="wrap">
+      <div class="vision__head">
+        <p class="chapter-no" data-reveal="fade">05 &nbsp; Future Vision</p>
+        <h2 class="display" id="vision-title" data-reveal>A leading hospitality platform, recognized for innovation, operational excellence and <em>distinctive guest experiences.</em></h2>
+      </div>
+      <div class="vision__cols">
+        <p data-reveal>The organizational structure has been designed to support both the current portfolio of businesses and future growth opportunities. As the organization expands, new hospitality concepts, restaurant brands, and complementary ventures can be integrated efficiently within a unified governance framework.</p>
+        <p data-reveal>Through centralized expertise, disciplined oversight, and shared resources, the Group seeks to build a resilient and scalable organization capable of adapting to evolving market conditions while maintaining consistent standards across its portfolio.</p>
+        <p data-reveal>As the platform matures, the Group may evaluate opportunities to extend selected capabilities beyond its internal portfolio, where such initiatives align with its long-term vision and create additional shareholder value.</p>
+        <p data-reveal>Ultimately, the vision is a diversified ecosystem of hospitality brands operating under a unified strategic direction, while preserving the distinctive identity and character of each concept.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 06 Contact ===== -->
+  <section class="band" id="contact" aria-labelledby="contact-title">
+    <div class="wrap contact">
+      <div>
+        <span class="caps label" data-reveal="fade">06 &nbsp; Contact</span>
+        <h2 class="title" id="contact-title" data-reveal>Write to us.</h2>
+        <p class="muted" data-reveal>For partnerships, new concepts and opportunities across the DORR Group.</p>
+        <div class="mail" data-reveal>
+          <a href="mailto:hello@dorr.example">hello@dorr.example</a>
+          <button class="caps copy-btn" type="button" id="copyMail" data-mail="hello@dorr.example">Copy</button>
+        </div>
+      </div>
+      <form class="form" id="contactForm" novalidate>
+        <div class="field" data-reveal>
+          <label class="caps" for="f-name">Name</label>
+          <input id="f-name" name="name" type="text" autocomplete="name" required>
+        </div>
+        <div class="field" data-reveal>
+          <label class="caps" for="f-email">Email</label>
+          <input id="f-email" name="email" type="email" autocomplete="email" required>
+        </div>
+        <div class="field" data-reveal>
+          <label class="caps" for="f-msg">Message</label>
+          <textarea id="f-msg" name="message" rows="4" required></textarea>
+        </div>
+        <button class="send caps" type="submit" data-reveal>Send</button>
+        <div class="form__thanks" role="status" aria-live="polite" tabindex="-1" id="formThanks">
+          <span class="caps label">Preview</span>
+          <p class="title">Thank you.</p>
+          <p class="muted">This is a preview of the DORR website — your message has not been sent. Please write to hello@dorr.example.</p>
+        </div>
+      </form>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="footer__top">
+    <nav class="footer__nav caps" aria-label="Footer">
+      <a href="#introduction">Introduction</a><a href="#structure">Structure</a><a href="#portfolio">Portfolio</a>
+    </nav>
+    <a class="mark" href="#top" aria-label="DORR, back to the start"><span class="mark__word">DORR</span><span class="mark__pearl" aria-hidden="true"></span></a>
+    <nav class="footer__nav footer__nav--end caps" aria-label="Footer, continued">
+      <a href="#vision">Vision</a><a href="#contact">Contact</a><a href="mailto:hello@dorr.example">hello@dorr.example</a>
+    </nav>
+  </div>
+
+  <details class="credits">
+    <summary class="caps">Film, sound &amp; photography credits</summary>
+    <div class="credits__grid">
+      <div>
+        <h4>Film</h4>
+        <ul>
+          <li><a href="https://mixkit.co/free-stock-video/foggy-ocean-landscape-1089/" rel="noopener">Misty coast</a> — Mixkit</li>
+          <li><a href="https://www.pexels.com/video/soft-sunlit-curtain-with-tree-shadows-35161057/" rel="noopener">Sunlit curtain</a> — Greg Benson, Pexels</li>
+          <li><a href="https://www.pexels.com/video/woman-carrying-a-potted-plant-8331930/" rel="noopener">By the window</a> — ROMAN ODINTSOV, Pexels</li>
+          <li><a href="https://www.pexels.com/video/elegant-indoor-pool-with-glass-ceiling-39958167/" rel="noopener">Pool hall</a> — Cá Bảo, Pexels</li>
+          <li><a href="https://www.pexels.com/video/a-person-pouring-tea-through-a-strainer-8507785/" rel="noopener">Tea</a> — Ivan S, Pexels</li>
+          <li><a href="https://www.pexels.com/video/a-table-setting-on-a-wedding-reception-8247208/" rel="noopener">A table set</a> — Mikhail Nilov, Pexels</li>
+          <li><a href="https://www.pexels.com/video/relaxing-candlelit-room-6813119/" rel="noopener">Candlelit spa</a> — ROMAN ODINTSOV, Pexels</li>
+          <li><a href="https://mixkit.co/free-stock-video/person-swimming-in-a-pool-3173/" rel="noopener">A swimmer</a> — Mixkit</li>
+          <li><a href="https://www.pexels.com/video/close-up-footage-of-a-shell-in-the-beach-3446608/" rel="noopener">Shell in the surf</a> — Piotr Wróbel, Pexels</li>
+          <li><a href="https://www.pexels.com/video/woman-in-hat-in-sea-at-sunset-14033094/" rel="noopener">Infinity pool at dusk</a> — Arsel Ozgurdal, Pexels</li>
+          <li><a href="https://mixkit.co/free-stock-video/woman-walking-on-beach-towards-boulders-1012/" rel="noopener">Walking to the stones</a> — Mixkit</li>
+          <li><a href="https://www.pexels.com/video/rustic-ceiling-with-ambient-lighting-decor-28675641/" rel="noopener">Lanterns</a> — Agung Pandit Wiguna, Pexels</li>
+          <li><a href="https://mixkit.co/free-stock-video/defocused-view-of-the-sunset-reflection-in-the-sea-34363/" rel="noopener">Sun path on water</a> — Mixkit</li>
+        </ul>
+      </div>
+      <div>
+        <h4>Sound</h4>
+        <ul>
+          <li>“Rest Now” — Eugenio Mininni, <a href="https://mixkit.co/free-stock-music/" rel="noopener">Mixkit</a></li>
+          <li>Sea waves ambience — <a href="https://mixkit.co/free-sound-effects/sea/" rel="noopener">Mixkit</a></li>
+        </ul>
+        <h4 style="margin-top:22px">Licences</h4>
+        <ul>
+          <li><a href="https://www.pexels.com/license/" rel="noopener">Pexels licence</a></li>
+          <li><a href="https://mixkit.co/license/" rel="noopener">Mixkit free licences</a></li>
+          <li><a href="https://unsplash.com/license" rel="noopener">Unsplash licence</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Photography (Unsplash)</h4>
+        <ul>
+          <li><a href="https://unsplash.com/photos/leafy-shadows-on-stone-wall-HP42wrBzGcg" rel="noopener">Leaf shadows on stone</a> — Pawel Czerwinski</li>
+          <li><a href="https://unsplash.com/photos/white-ceramic-vase-on-white-table-XdAFqUbkd3w" rel="noopener">Tables under a colonnade</a> — Philippe Jausions</li>
+          <li><a href="https://unsplash.com/photos/a-table-set-for-a-formal-dinner-with-a-lit-candle-Ro_TUH1cgA8" rel="noopener">Candle and table</a> — Caroline Hernandez</li>
+          <li><a href="https://unsplash.com/photos/shadow-of-palm-fronds-on-a-textured-wall-t1zCepc2Mqk" rel="noopener">Palm shadow</a> — Chris Weiher</li>
+          <li><a href="https://unsplash.com/photos/stone-steps-leading-to-a-doorway-with-sunlight-shadows-YFk2E53Wfzg" rel="noopener">Stone steps</a> — moniek van rosse</li>
+          <li><a href="https://unsplash.com/photos/fluted-stone-pillar-with-long-shadow-ncKdMqiOqJ8" rel="noopener">Pillar shadow</a> — Heng Chiu</li>
+          <li><a href="https://unsplash.com/photos/tree-shadows-on-stone-wall-oe90c6l4PYE" rel="noopener">Tree shadows, gate</a> — Heng Chiu</li>
+        </ul>
+      </div>
+    </div>
+  </details>
+
+  <div class="footer__base caps">
+    <span>© 2026 DORR Hospitality Group</span>
+    <a href="#top">Back to the start ↑</a>
+  </div>
+</footer>
+
+<script src="../vendor/js/gsap.min.js?v=20261030" defer></script>
+<script src="../vendor/js/ScrollTrigger.min.js?v=20261030" defer></script>
+<script src="../vendor/js/lenis.min.js?v=20261030" defer></script>
+<script src="js/main.js?v=20261030" defer></script>
+<script>
+  /* last resort: never let the veil stay */
+  setTimeout(function () { var v = document.getElementById('veil'); if (v) { v.classList.add('is-gone'); setTimeout(function () { if (v.parentNode) v.parentNode.removeChild(v); }, 1300); } }, 10000);
+</script>
+</body>
+</html>

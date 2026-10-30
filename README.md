@@ -41,3 +41,9 @@ Published with GitHub Pages from the `main` branch.
 - The DORR pearl inside: tap it for the group introduction and structure
 - Five brand pearls built from points and lines, each a different construction; tap one for its full sheet
 - The eight disciplines as beads on a thread of light, Future Vision as an orrery, then the readable dossier
+
+## Version 9 (`v9/`)
+"A day, held still", in the spirit of Aman's calm. Open `v9/index.html`.
+- Full-bleed, slow brand film cut from free-licence stock footage (credits in the page footer), with optional ambient sound that starts off
+- The page moves from dawn linen to dusk and an ink night band; centred wordmark, quiet serif typography
+- Structure, eight disciplines, five brand rows, Future Vision and contact
