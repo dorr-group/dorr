@@ -3,8 +3,11 @@
    the photograph once; its size follows the light there, it is shaded as a small sphere with a highlight and a
    faint nacre sheen, and it can carry the photograph's own colour. Uniforms let pearls string on along each thread
    (uReveal), resolve into the photograph (uMix), sway, and swell/roll aside under the cursor.
-   One small WebGL1 context per figure: created near the viewport, idle when nothing changes, paused off-screen,
-   released when far, and dropped (static <img>) when frames run slow. */
+   Engine: ONE shared WebGL1 context for the whole page. The program is compiled once at start-up and every picture
+   is decoded and uploaded during idle time, so a figure never compiles, uploads or switches GL contexts on its
+   first visible frame. Each figure draws into its own 2D canvas (a blit from the shared buffer); figures render only
+   while visible and changing, hand back to the plain <img> once resolved, and everything falls back to the <img>
+   when WebGL is missing or frames run slow. */
 (function () {
   'use strict';
 
@@ -70,68 +73,50 @@
     c = (c || '#000').replace('#', '');
     return [parseInt(c.slice(0, 2), 16) / 255, parseInt(c.slice(2, 4), 16) / 255, parseInt(c.slice(4, 6), 16) / 255];
   }
+  function abs(src) { var a = document.createElement('a'); a.href = src; return a.href; }
   var isPhone = window.matchMedia('(max-width: 700px)').matches;
-  var DPR_CAP = isPhone ? 1.5 : 1.75, BIG_CAP = isPhone ? 1 : 1.25;
-  var MAX_LIVE = isPhone ? 4 : 6;
-  var supported = (function () {
-    try {
-      var c = document.createElement('canvas');
-      var g = c.getContext('webgl');
-      if (g && g.getExtension('WEBGL_lose_context')) g.getExtension('WEBGL_lose_context').loseContext();
-      return !!g;
-    } catch (e) { return false; }
-  })();
-  var all = [], level = 0, forceGL = /[?&]gl=force/.test(location.search);
+  var DPR_CAP = isPhone ? 1.5 : 1.75, BIG_CAP = isPhone ? 1 : 1.25, MAX_TEX = isPhone ? 720 : 1024;
+  var level = 0, forceGL = /[?&]gl=force/.test(location.search), all = [];
 
-  function Strand(canvas, opts) {
-    this.canvas = canvas;
-    this.o = Object.assign({
-      cell: 14, sag: 0.9, line: 1, ground: '#141a1b', groundA: 1, thread: '#8f8676', threadA: .55, pearl: '#efe8dc',
-      tint: .85, lo: .02, hi: .98, gamma: 1, minR: .18, maxR: 1, mix: 0, reveal: 1, sway: .06, zoom: 1, fx: .5, fy: .5,
-      lens: 140, dprCap: DPR_CAP, live: false, maxTex: isPhone ? 720 : 1024
-    }, opts || {});
-    this.host = this.o.host || canvas.parentElement;
-    this.img = this.o.img || this.host.querySelector('img');
-    this.gl = null; this.visible = false; this.near = false; this.dirty = true; this.ready = false;
-    this.mouse = [0, 0, 0]; this.mTarget = 0; this.t = 0;
-    all.push(this);
+  // ——— shared GL ———
+  var G = null;
+  function shared() {
+    if (G) return G.gl ? G : null;
+    G = { gl: null, texs: {}, pending: {} };
+    try {
+      var cv = document.createElement('canvas'); cv.width = 2; cv.height = 2;
+      var gl = cv.getContext('webgl', { alpha: true, premultipliedAlpha: true, antialias: false, depth: false, stencil: false, preserveDrawingBuffer: false, powerPreference: 'default' });
+      if (!gl) return null;
+      var sh = function (t, s) { var x = gl.createShader(t); gl.shaderSource(x, s); gl.compileShader(x); return x; };
+      var p = gl.createProgram();
+      gl.attachShader(p, sh(gl.VERTEX_SHADER, VERT)); gl.attachShader(p, sh(gl.FRAGMENT_SHADER, FRAG)); gl.linkProgram(p);
+      if (!gl.getProgramParameter(p, gl.LINK_STATUS)) return null;
+      gl.useProgram(p);
+      var b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]), gl.STATIC_DRAW);
+      var loc = gl.getAttribLocation(p, 'aPos'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+      var u = {};
+      ['uTex', 'uRes', 'uFit', 'uCell', 'uSag', 'uLine', 'uGround', 'uGroundA', 'uThread', 'uThreadA', 'uPearl', 'uTint', 'uLo', 'uHi', 'uGamma', 'uMinR', 'uMaxR', 'uMix', 'uReveal', 'uTime', 'uSway', 'uMouse', 'uLens']
+        .forEach(function (n) { u[n] = gl.getUniformLocation(p, n); });
+      gl.uniform1i(u.uTex, 0);
+      cv.addEventListener('webglcontextlost', function (e) { e.preventDefault(); Strand.disableAll(); }, false);
+      G.gl = gl; G.cv = cv; G.u = u;
+      // compile + first draw now, off-screen, so the driver has everything ready
+      gl.viewport(0, 0, 2, 2); gl.drawArrays(gl.TRIANGLES, 0, 6); gl.flush();
+      return G;
+    } catch (e) { return null; }
   }
-  Strand.prototype.set = function (p) {
-    for (var k in p) { if (this.o[k] !== p[k]) { this.o[k] = p[k]; this.dirty = true; } }
-    return this;
-  };
-  Strand.prototype.init = function () {
-    if (this.gl || level >= 2 || !supported) return;
-    var self = this, cv = this.canvas;
-    var gl = cv.getContext('webgl', { alpha: true, premultipliedAlpha: true, antialias: false, depth: false, stencil: false, powerPreference: 'low-power' });
-    if (!gl) return;
-    function sh(t, s) { var x = gl.createShader(t); gl.shaderSource(x, s); gl.compileShader(x); return x; }
-    var p = gl.createProgram();
-    gl.attachShader(p, sh(gl.VERTEX_SHADER, VERT)); gl.attachShader(p, sh(gl.FRAGMENT_SHADER, FRAG)); gl.linkProgram(p);
-    if (!gl.getProgramParameter(p, gl.LINK_STATUS)) return;
-    gl.useProgram(p);
-    var b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]), gl.STATIC_DRAW);
-    var loc = gl.getAttribLocation(p, 'aPos'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
-    this.u = {};
-    ['uTex', 'uRes', 'uFit', 'uCell', 'uSag', 'uLine', 'uGround', 'uGroundA', 'uThread', 'uThreadA', 'uPearl', 'uTint', 'uLo', 'uHi', 'uGamma', 'uMinR', 'uMaxR', 'uMix', 'uReveal', 'uTime', 'uSway', 'uMouse', 'uLens']
-      .forEach(function (n) { self.u[n] = gl.getUniformLocation(p, n); });
-    this.gl = gl;
-    this.texs = {};
-    this.lost = function (e) { e.preventDefault(); self.gl = null; self.ready = false; };
-    cv.addEventListener('webglcontextlost', this.lost, false);
-    this.upload(this.img);
-  };
-  // decode a reduced bitmap off the main thread (pearls only need a modest texture; the resolved state hands back
-  // to the <img>) and keep one texture per picture, so later swaps are a bind, not an upload
-  Strand.prototype.texture = function (img, cb) {
-    var self = this, key = img.currentSrc || img.src;
-    if (this.texs[key]) { cb(this.texs[key]); return; }
+  // decode a reduced bitmap off the main thread and upload it once; keyed by absolute URL
+  function texture(img, cb) {
+    var g = shared(); if (!g) return;
+    var key = abs(img.currentSrc || img.src);
+    if (g.texs[key]) { cb(g.texs[key]); return; }
+    if (g.pending[key]) { g.pending[key].push(cb); return; }
+    g.pending[key] = [cb];
     var put = function (src, flip, w, h) {
-      var gl = self.gl;
-      if (!gl) return;
+      var gl = g.gl; if (!gl) return;
       var tex = gl.createTexture();
-      gl.bindTexture(gl.TEXTURE_2D, tex);
+      gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, tex);
       gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flip);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
@@ -139,11 +124,14 @@
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
       try { gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, src); } catch (e) { return; }
       if (src.close) src.close();
-      self.texs[key] = { tex: tex, w: w, h: h };
-      cb(self.texs[key]);
+      // touch the texture once so the upload is finished before anyone needs it
+      gl.viewport(0, 0, 2, 2); gl.drawArrays(gl.TRIANGLES, 0, 6); gl.flush();
+      var t = g.texs[key] = { tex: tex, w: w, h: h };
+      var cbs = g.pending[key]; delete g.pending[key];
+      cbs.forEach(function (f) { f(t); });
     };
     var go = function () {
-      var nw = img.naturalWidth, nh = img.naturalHeight, k = Math.min(1, self.o.maxTex / Math.max(nw, nh));
+      var nw = img.naturalWidth, nh = img.naturalHeight, k = Math.min(1, MAX_TEX / Math.max(nw, nh));
       if (window.createImageBitmap) {
         createImageBitmap(img, { resizeWidth: Math.round(nw * k), resizeHeight: Math.round(nh * k), resizeQuality: 'medium', imageOrientation: 'flipY' })
           .then(function (bm) { put(bm, false, nw, nh); }, function () { put(img, true, nw, nh); });
@@ -151,40 +139,48 @@
     };
     if (img.complete && img.naturalWidth) go();
     else { img.loading = 'eager'; img.addEventListener('load', go, { once: true }); }
+  }
+  function loadSrc(src, cb) {
+    var im = new Image(); im.decoding = 'async';
+    im.onload = function () { texture(im, cb); };
+    im.onerror = function () { cb(null); };
+    im.src = src;
+  }
+
+  function Strand(canvas, opts) {
+    this.canvas = canvas;
+    this.o = Object.assign({
+      cell: 14, sag: 0.9, line: 1, ground: '#141a1b', groundA: 1, thread: '#8f8676', threadA: .55, pearl: '#efe8dc',
+      tint: .85, lo: .02, hi: .98, gamma: 1, minR: .18, maxR: 1, mix: 0, reveal: 1, sway: .06, zoom: 1, fx: .5, fy: .5,
+      lens: 140, dprCap: DPR_CAP
+    }, opts || {});
+    this.host = this.o.host || canvas.parentElement;
+    this.img = this.o.img || this.host.querySelector('img');
+    this.ctx = null; this.visible = false; this.dirty = true; this.ready = false; this.t = 0;
+    this.mouse = [0, 0, 0]; this.mTarget = 0;
+    all.push(this);
+  }
+  Strand.prototype.set = function (p) {
+    for (var k in p) { if (this.o[k] !== p[k]) { this.o[k] = p[k]; this.dirty = true; } }
+    return this;
   };
-  Strand.prototype.use = function (t) { this.tex = t.tex; this.iw = t.w; this.ih = t.h; this.dirty = true; };
-  Strand.prototype.has = function (src) { var a = document.createElement('a'); a.href = src; return !!(this.texs && this.texs[a.href]); };
-  Strand.prototype.swap = function (src) {
-    var a = document.createElement('a'); a.href = src;
-    var t = this.texs && this.texs[a.href]; if (!t) return false; this.use(t); return true;
-  };
-  Strand.prototype.upload = function (img) {
+  Strand.prototype.init = function () {
+    if (this.ctx || level >= 2 || !shared()) return;
     var self = this;
-    this.img = img;
-    if (!this.gl) return;
-    this.texture(img, function (t) {
-      self.use(t); self.ready = true; self.resize();
-      // warm-up: shade one full frame while still hidden, then the real state
-      var o = self.o, r = o.reveal, m = o.mix; o.reveal = 1; o.mix = 0; self.render(0); o.reveal = r; o.mix = m; self.render(0);
-      if (self.gl) self.gl.flush();
+    this.ctx = this.canvas.getContext('2d');
+    if (!this.ctx) return;
+    texture(this.img, function (t) {
+      if (level >= 2) return;
+      self.use(t); self.ready = true; self.resize(); self.render(0);
       if (self.o.onReady) self.o.onReady(self);
-      if (self.o.preload && !self.preloaded) { self.preloaded = true; self.preload(self.o.preload); }
+      if (self.o.preload) { var list = self.o.preload.slice(); (function next() { var s = list.shift(); if (s) idle(function () { loadSrc(s, function () { next(); }); }); })(); }
     });
   };
-  // decode + upload further pictures during idle time (used by the brand viewer)
-  Strand.prototype.preload = function (srcs) {
-    var self = this, list = srcs.slice();
-    var idle = window.requestIdleCallback || function (f) { return setTimeout(f, 120); };
-    (function next() {
-      var src = list.shift(); if (!src || !self.gl) return;
-      var im = new Image(); im.decoding = 'async';
-      im.onload = function () { self.texture(im, function () { idle(next, { timeout: 1200 }); }); };
-      im.onerror = function () { idle(next, { timeout: 1200 }); };
-      im.src = src;
-    })();
-  };
+  Strand.prototype.use = function (t) { this.tx = t; this.dirty = true; };
+  Strand.prototype.swap = function (src) { var g = shared(); var t = g && g.texs[abs(src)]; if (!t) return false; this.use(t); return true; };
+  Strand.prototype.upload = function (img) { var self = this; texture(img, function (t) { self.use(t); }); };
   Strand.prototype.resize = function () {
-    if (!this.gl) return;
+    if (!this.ctx) return;
     var r = this.canvas.getBoundingClientRect();
     var d = Math.min(window.devicePixelRatio || 1, this.o.dprCap);
     var w = Math.max(2, Math.round(r.width * d)), h = Math.max(2, Math.round(r.height * d));
@@ -192,32 +188,37 @@
     this.dpr = d; this.dirty = true;
   };
   Strand.prototype.fit = function () {
-    var o = this.o, ca = this.canvas.width / this.canvas.height, ia = this.iw / this.ih, sx, sy;
+    var o = this.o, ca = this.canvas.width / this.canvas.height, ia = this.tx.w / this.tx.h, sx, sy;
     if (ca > ia) { sx = 1; sy = ia / ca; } else { sx = ca / ia; sy = 1; }
     sx /= o.zoom; sy /= o.zoom;
     return [sx, sy, o.fx * (1 - sx), (1 - o.fy) * (1 - sy)];
   };
   Strand.prototype.render = function (dt) {
-    var gl = this.gl;
-    if (!gl || !this.ready) return;
-    var o = this.o, u = this.u, d = this.dpr || 1, m = this.mouse;
+    var g = shared();
+    if (!g || !this.ready || !this.ctx || !this.tx) return;
+    var gl = g.gl, u = g.u, o = this.o, d = this.dpr || 1, m = this.mouse;
+    var W = this.canvas.width, H = this.canvas.height;
     if (o.sway && level === 0) this.t += dt;
     m[2] += (this.mTarget - m[2]) * Math.min(1, dt * 7);
     if (Math.abs(this.mTarget - m[2]) < 0.004) m[2] = this.mTarget;
-    gl.viewport(0, 0, this.canvas.width, this.canvas.height);
+    if (g.cv.width < W || g.cv.height < H) { g.cv.width = Math.max(g.cv.width, W); g.cv.height = Math.max(g.cv.height, H); }
+    var BH = g.cv.height;
+    var sx0 = 0, sy0 = 0, sw = W, shh = H;
     gl.disable(gl.SCISSOR_TEST);
+    gl.viewport(0, 0, W, H);
     gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
     if (o.clipEl) {
-      // only shade the part of the canvas that the round window actually shows
+      // only shade (and copy) the part of the canvas the round window shows
       var cr = this.canvas.getBoundingClientRect(), pr = o.clipEl.getBoundingClientRect();
-      var sx = this.canvas.width / cr.width, sy = this.canvas.height / cr.height;
-      var x0 = Math.max(0, Math.floor((pr.left - cr.left) * sx)), x1 = Math.min(this.canvas.width, Math.ceil((pr.right - cr.left) * sx));
-      var y0 = Math.max(0, Math.floor((cr.bottom - pr.bottom) * sy)), y1 = Math.min(this.canvas.height, Math.ceil((cr.bottom - pr.top) * sy));
-      if (x1 <= x0 || y1 <= y0) return;
-      gl.enable(gl.SCISSOR_TEST); gl.scissor(x0, y0, x1 - x0, y1 - y0);
+      var kx = W / cr.width, ky = H / cr.height;
+      var x0 = Math.max(0, Math.floor((pr.left - cr.left) * kx)), x1 = Math.min(W, Math.ceil((pr.right - cr.left) * kx));
+      var yt = Math.max(0, Math.floor((pr.top - cr.top) * ky)), yb = Math.min(H, Math.ceil((pr.bottom - cr.top) * ky));
+      if (x1 <= x0 || yb <= yt) return;
+      gl.enable(gl.SCISSOR_TEST); gl.scissor(x0, H - yb, x1 - x0, yb - yt);
+      sx0 = x0; sy0 = yt; sw = x1 - x0; shh = yb - yt;
     }
-    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, this.tex); gl.uniform1i(u.uTex, 0);
-    gl.uniform2f(u.uRes, this.canvas.width, this.canvas.height);
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, this.tx.tex);
+    gl.uniform2f(u.uRes, W, H);
     var f = this.fit(); gl.uniform4f(u.uFit, f[0], f[1], f[2], f[3]);
     gl.uniform1f(u.uCell, o.cell * d); gl.uniform1f(u.uSag, o.sag); gl.uniform1f(u.uLine, o.line * d);
     if (this._g !== o.ground) { this._g = o.ground; this._gv = hex(o.ground); }
@@ -231,11 +232,14 @@
     gl.uniform1f(u.uSway, level === 0 ? o.sway : 0);
     gl.uniform3f(u.uMouse, m[0], m[1], m[2]); gl.uniform1f(u.uLens, o.lens * d);
     gl.drawArrays(gl.TRIANGLES, 0, 6);
+    // blit the drawn region (bottom-left of the shared buffer) into this figure's canvas
+    this.ctx.clearRect(sx0, sy0, sw, shh);
+    this.ctx.drawImage(g.cv, sx0, BH - H + sy0, sw, shh, sx0, sy0, sw, shh);
     this.dirty = false;
   };
   Strand.prototype.needsFrame = function () {
-    var beadsShow = this.o.mix < 0.999 || this.mouse[2] > 0.001 || this.mTarget > 0;
-    return this.dirty || (beadsShow && this.o.sway && level === 0) || this.mouse[2] !== this.mTarget;
+    var beads = this.o.mix < 0.999 || this.mouse[2] > 0.001 || this.mTarget > 0;
+    return this.dirty || (beads && this.o.sway && level === 0) || this.mouse[2] !== this.mTarget;
   };
   Strand.prototype.pointer = function (e) {
     var r = this.canvas.getBoundingClientRect(), d = this.dpr || 1;
@@ -243,28 +247,14 @@
     this.mTarget = 1; this.dirty = true;
   };
   Strand.prototype.leave = function () { this.mTarget = 0; this.dirty = true; };
-  Strand.prototype.destroy = function () {
-    var gl = this.gl; this.ready = false; this.gl = null; this.texs = {}; this.preloaded = false;
-    if (gl) { try { var x = gl.getExtension('WEBGL_lose_context'); if (x) x.loseContext(); } catch (e) {} }
-    if (this.lost) this.canvas.removeEventListener('webglcontextlost', this.lost);
-  };
+  Strand.prototype.destroy = function () { this.ready = false; };
 
-  var io = null;
-  function live() { var n = 0; all.forEach(function (l) { if (l.gl) n++; }); return n; }
-  function prune() {
-    for (var i = 0; i < all.length && live() > MAX_LIVE; i++) {
-      var l = all[i]; if (l.gl && !l.near && !l.o.live) { l.destroy(); if (l.o.onSleep) l.o.onSleep(l); }
-    }
-  }
+  var idle = function (f) { return (window.requestIdleCallback || function (x) { return setTimeout(x, 120); })(f, { timeout: 1500 }); };
   function watch(l) {
-    if (!io) io = new IntersectionObserver(function (es) {
-      es.forEach(function (e) {
-        var s = e.target.__strand; if (!s) return;
-        s.near = e.isIntersecting;
-        if (e.isIntersecting) { s.init(); s.resize(); prune(); }
-      });
-    }, { rootMargin: '70% 0px 70% 0px' });
-    l.canvas.__strand = l; io.observe(l.canvas);
+    new IntersectionObserver(function (es) {
+      var e = es[0];
+      if (e.isIntersecting) { l.init(); l.resize(); }
+    }, { rootMargin: '120% 0px 120% 0px' }).observe(l.canvas);
     new IntersectionObserver(function (es) { l.visible = es[0].isIntersecting; if (l.visible) l.dirty = true; }).observe(l.canvas);
   }
 
@@ -274,8 +264,7 @@
     var dt = Math.min(deltaMs / 1000, 0.1), drew = 0;
     for (var i = 0; i < all.length; i++) {
       var l = all[i];
-      if (!l.gl || !l.ready || !(l.visible || l.o.live)) continue;
-      // fully resolved and untouched: let the plain <img> show and keep the GPU idle
+      if (!l.ready || !l.visible) continue;
       var still = l.o.mix >= 0.999 && l.mouse[2] === 0 && l.mTarget === 0;
       if (still !== !!l.photo) { l.photo = still; l.host.classList.toggle('is-photo', still); if (!still) l.dirty = true; }
       if (still) continue;
@@ -290,17 +279,15 @@
       if (level >= 2) Strand.disableAll();
     }
   }
-  Strand.disableAll = function () { level = 2; all.forEach(function (l) { l.destroy(); if (l.o.onSleep) l.o.onSleep(l); }); };
+  Strand.disableAll = function () { level = 2; all.forEach(function (l) { l.ready = false; if (l.o.onSleep) l.o.onSleep(l); }); };
+  Strand.resizeAll = function () { all.forEach(function (l) { if (l.ctx) l.resize(); }); };
+  // set everything up during idle time: shared program, every figure's texture, the viewer's other pictures
   Strand.prewarm = function () {
     var list = all.slice();
-    (function next() {
-      var l = list.shift(); if (!l) return;
-      if (!l.gl && level < 2) l.init();
-      (window.requestIdleCallback || function (f) { setTimeout(f, 200); })(next, { timeout: 1500 });
-    })();
+    (function next() { var l = list.shift(); if (!l) return; if (level < 2) l.init(); idle(next); })();
   };
-  Strand.resizeAll = function () { all.forEach(function (l) { if (l.gl) l.resize(); }); };
   Strand.make = function (canvas, opts) { if (!supported) return null; var l = new Strand(canvas, opts); watch(l); return l; };
+  var supported = (function () { try { var c = document.createElement('canvas'); return !!c.getContext('webgl'); } catch (e) { return false; } })();
   Strand.supported = supported;
   Strand.tick = tick;
   Strand.BIG_CAP = BIG_CAP;

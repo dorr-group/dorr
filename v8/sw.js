@@ -61,7 +61,7 @@ self.addEventListener('fetch', function (e) {
     e.respondWith(fetch(req).then(function (res) {
       if (res && res.ok) { var copy = res.clone(); caches.open(VERSION).then(function (c) { c.put(req, copy); }); }
       return res;
-    }).catch(function () { return caches.match(req); }));
+    }).catch(function () { return caches.match(req).then(function (r) { return r || caches.match(req, { ignoreSearch: true }); }); }));
     return;
   }
   e.respondWith(caches.match(req).then(function (hit) {

@@ -381,7 +381,7 @@
       rows.forEach(function (r, j) { r.classList.toggle('is-on', j === i); });
       num.textContent = String(i + 1).padStart(2, '0');
       var src = rows[i].getAttribute('data-src');
-      if (!vs || !vs.gl || RM) { vimg.src = src; return; }
+      if (!vs || !vs.ready || RM) { vimg.src = src; return; }
       if (busy) busy.kill();
       busy = gsap.timeline();
       busy.add(tw(vs, { mix: 0 }, { duration: .35, ease: E.in }))
@@ -539,6 +539,7 @@
     setupContact();
     setupFooter();
     intro();
+    if (Strand && Strand.prewarm && !RM) setTimeout(Strand.prewarm, 600); // program + textures ready long before they are seen
     var t;
     window.addEventListener('resize', function () { clearTimeout(t); t = setTimeout(function () { if (Strand) Strand.resizeAll(); }, 150); });
     window.addEventListener('load', function () { ST.refresh(); });
