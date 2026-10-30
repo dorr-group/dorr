@@ -1,0 +1,27 @@
+/* DORR v7 — self-hosted type (no runtime CDN)
+   Display: Noto Serif Display, condensed axis (free stand-in for a condensed Didone)
+   Body/labels: Archivo, expanded width axis (free stand-in for an extended grotesk)
+   Script: Monsieur La Doulaise (free stand-in for a fine formal script) */
+@font-face {
+  font-family: "Dorr Didone";
+  src: url("../../vendor/fonts/noto-serif-display-latin-wdth-normal.woff2") format("woff2");
+  font-weight: 100 900;
+  font-stretch: 62.5% 100%;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Dorr Grotesk";
+  src: url("../../vendor/fonts/archivo-latin-standard-normal.woff2") format("woff2");
+  font-weight: 100 900;
+  font-stretch: 62% 125%;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Dorr Script";
+  src: url("../../vendor/fonts/monsieur-la-doulaise-latin-400-normal.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
