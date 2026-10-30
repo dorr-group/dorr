@@ -47,3 +47,9 @@ Published with GitHub Pages from the `main` branch.
 - Full-bleed, slow brand film cut from free-licence stock footage (credits in the page footer), with optional ambient sound that starts off
 - The page moves from dawn linen to dusk and an ink night band; centred wordmark, quiet serif typography
 - Structure, eight disciplines, five brand rows, Future Vision and contact
+
+## Version 10 (`v10/`)
+A refined copy of the approved Version 4. Open `v10/index.html`.
+- One gesture, one step: the film moves chapter by chapter; the menu and rail jump straight to a chapter
+- Tap a pearl to fly inside its points and lines and see the brand (or the group) there; Back flies out again
+- Softer, slower motion and new sound effects tuned to the music's key

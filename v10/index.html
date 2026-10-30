@@ -1,0 +1,336 @@
+<!doctype html>
+<!--
+  DORR — Version 10 (an evolution of Version 4). Inspired by the craft of Igloo Inc (abeto, 2024): material quality,
+  lighting, scroll-driven camera feel, point-and-line rendering and a monospace label
+  language. No code, models, textures, text or layouts were taken from it.
+
+  Originality checklist (Igloo signature → what v10 does instead)
+  - Igloo of ice blocks on a snowy mountain, 3/4 hero view → a DORR pearl shell of carved
+    nacre blocks resting in still, mirror-like water, framed frontally and symmetrically.
+  - Intro: wireframe igloo in a web of lines → none; the shell is simply there and the
+    scene surfaces out of a warm pearl haze.
+  - Measuring triangle / tiny numbers drawn on the igloo → none on the shell.
+  - Portfolio: unique ice-crystal blocks drifting vertically through fog, with boxed
+    labels on leader lines → five spheres of points and lines (each its own construction:
+    geodesic, ripple, nested, meridian, two halves) travelling horizontally like beads;
+    their information is written on a ring of text that circles each pearl.
+  - Links section: ring of ice fragments → the eight disciplines as eight bead-pearls
+    strung on one thread of light (a necklace), the camera travelling along the strand.
+  - Footer: particle figure on a lit platform → Future Vision as an orrery: the nacre pearl
+    at the centre, the five brands on orbits, open slots for concepts to come.
+  - HUD: logo top-left, text block top-right, boxed counter bottom-left, scrambling text
+    → a vertical "string of pearls" progress rail on the right, chapter caption bottom-left,
+    typed (not scrambled) labels, soft mask reveals for titles.
+  - Transitions: chromatic aberration + tech displacement + frost → a radial nacre-light
+    bloom with water-ripple refraction.
+  - Palette: icy blue-grey → DORR's warm pearl, champagne and travertine.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>DORR Hospitality Group</title>
+  <meta name="description" content="DORR is a hospitality group: one Holding, one Services Company and five distinct brands.">
+  <meta name="theme-color" content="#b7afa4">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="DORR 10">
+  <link rel="preload" href="../vendor/fonts/archivo-latin-standard-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="../vendor/fonts/ibm-plex-mono-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/fonts.css?v=20261030v10">
+  <link rel="stylesheet" href="css/style.css?v=20261030v10">
+  <script>document.documentElement.classList.add('js');</script>
+  <script type="importmap">
+    { "imports": {
+        "three": "../vendor/three/build/three.module.js",
+        "three/addons/": "../vendor/three/examples/jsm/"
+    } }
+  </script>
+</head>
+<body>
+
+  <!-- the scene sits behind everything -->
+  <canvas class="gl" data-gl aria-hidden="true"></canvas>
+  <div class="tags" data-tags aria-hidden="true"><svg class="tags__wires" data-wires></svg></div>
+
+  <!-- loader -->
+  <div class="boot" data-boot aria-hidden="true">
+    <p class="boot__mark">DORR</p>
+    <p class="boot__line"><span data-boot-msg>Polishing the shell</span><span data-boot-num>000</span></p>
+    <div class="boot__bar"><i data-boot-bar></i></div>
+    <div class="boot__choice" data-choice hidden>
+      <button type="button" data-sound-on><i class="bars" aria-hidden="true"><b></b><b></b><b></b><b></b></i>Enter with sound</button>
+      <button type="button" data-sound-off>Enter in silence</button>
+    </div>
+  </div>
+
+  <!-- HUD -->
+  <header class="hud hud--top">
+    <a class="hud__logo" href="#top" aria-label="DORR, back to the start"><span>DORR</span><small>Hospitality Group</small></a>
+    <button class="hud__sound" type="button" data-sound-toggle aria-pressed="false"><i class="bars" aria-hidden="true"><b></b><b></b><b></b><b></b></i><span data-sound-label>Sound off</span></button>
+    <a class="hud__link" href="#dossier">Dossier</a>
+    <button class="hud__menu" type="button" data-menu-open aria-haspopup="dialog" aria-controls="menu"><i aria-hidden="true"></i><span>Menu</span></button>
+  </header>
+  <div class="hud hud--bottom" aria-hidden="true">
+    <p class="hud__chapter"><b data-ch-num>01</b><span data-ch-name>The Shell</span></p>
+    <p class="hud__hint" data-hint>Scroll</p>
+  </div>
+  <nav class="rail" aria-label="Chapters">
+    <i class="rail__fill" data-progress aria-hidden="true"></i>
+    <ol data-ticks>
+      <li><button type="button" data-goto="0"><i aria-hidden="true"></i><span>The Shell</span></button></li>
+      <li><button type="button" data-goto="1"><i aria-hidden="true"></i><span>The Holding</span></button></li>
+      <li><button type="button" data-goto="2"><i aria-hidden="true"></i><span>The Pearl</span></button></li>
+      <li><button type="button" data-goto="3"><i aria-hidden="true"></i><span>The Portfolio</span></button></li>
+      <li><button type="button" data-goto="4"><i aria-hidden="true"></i><span>Services Company</span></button></li>
+      <li><button type="button" data-goto="5"><i aria-hidden="true"></i><span>Future Vision</span></button></li>
+    </ol>
+  </nav>
+
+  <main id="top">
+    <!-- the journey: a tall scroll track, HUD text surfaces per chapter -->
+    <section class="track" data-track aria-label="The DORR journey">
+
+      <div class="panel panel--hero" data-panel="0,0.075">
+        <p class="kicker"><span>01</span>Hospitality Group</p>
+        <h1 class="panel__mega">DORR</h1>
+        <p class="panel__sub">One Holding. One Services Company. Five brands, each with its own character.</p>
+      </div>
+
+      <div class="panel panel--left" data-panel="0.09,0.19">
+        <p class="kicker"><span>02</span>Introduction</p>
+        <h2 class="panel__title">The shell protects.<br>The pearl shines.</h2>
+        <p>As the Group expands its portfolio of hospitality concepts, DORR brings every brand into one clear organizational structure and an integrated operating model, sharing expertise while preserving the individuality and entrepreneurial spirit of each.</p>
+      </div>
+
+      <div class="panel panel--right" data-panel="0.19,0.265">
+        <p class="kicker"><span>02</span>What the shell is for</p>
+        <ul class="panel__list">
+          <li><b>Stronger governance</b><span>Clear oversight across every entity.</span></li>
+          <li><b>Optimized resources</b><span>Shared expertise, used where it adds most.</span></li>
+          <li><b>Room to innovate</b><span>A structure that supports new ideas.</span></li>
+          <li><b>Agility &amp; consistency</b><span>The same standard, everywhere.</span></li>
+        </ul>
+      </div>
+
+      <div class="panel panel--pearl" data-panel="0.275,0.345">
+        <p class="kicker"><span>03</span>The pearl</p>
+        <h2 class="panel__title">The pearl is DORR.</h2>
+        <button class="cta" type="button" data-open-dorr>Open the pearl <i aria-hidden="true">↗</i></button>
+      </div>
+
+      <div class="panel panel--brands" data-panel="0.375,0.645">
+        <p class="kicker"><span>04</span>The Portfolio · 5 brands</p>
+        <ol class="brands" data-brands>
+          <li data-brand data-type="Restaurant" data-img="img/dada.webp" data-alt="Long tables set for dinner under string lights" data-img2="img/dada-room.webp" data-alt2="A bright dining room with tall arched windows and set tables">
+            <button type="button"><span class="brands__n">01</span><b>DADA</b><em>Restaurant</em></button>
+            <p>A distinct dining concept with its own identity, supported by the Group.</p>
+          </li>
+          <li data-brand data-type="Beachclub" data-img2="img/sayah.webp" data-alt2="Straw parasols and loungers on a beach in warm evening light">
+            <button type="button"><span class="brands__n">02</span><b>SAYAH</b><em>Beachclub</em></button>
+            <p>A beach club with its own rhythm, backed by shared Group expertise.</p>
+          </li>
+          <li data-brand data-type="Hospitality concept" data-img2="img/dejavu.webp" data-alt2="A cocktail glass on a dark bar counter beside red roses">
+            <button type="button"><span class="brands__n">03</span><b>DÉJÀ VU</b><em>Hospitality concept</em></button>
+            <p>A DORR hospitality concept.</p>
+          </li>
+          <li data-brand data-type="Hospitality concept" data-img2="img/m04.webp" data-alt2="A calm room with a low wooden table, woven cushions and a round window">
+            <button type="button"><span class="brands__n">04</span><b>M04</b><em>Hospitality concept</em></button>
+            <p>A DORR hospitality concept.</p>
+          </li>
+          <li data-brand data-type="Hospitality concept" data-img2="img/randezvou.webp" data-alt2="A table for two by a window over city lights at night">
+            <button type="button"><span class="brands__n">05</span><b>RANDEZVOU</b><em>Hospitality concept</em></button>
+            <p>A DORR hospitality concept.</p>
+          </li>
+        </ol>
+      </div>
+
+      <div class="panel panel--ring" data-panel="0.668,0.848">
+        <p class="kicker"><span>05</span>The Services Company</p>
+        <h2 class="panel__title">Eight disciplines,<br>one thread.</h2>
+        <ol class="disciplines" data-disciplines>
+          <li>Culinary &amp; Beverage</li>
+          <li>Creative &amp; Experience</li>
+          <li>Marketing &amp; CRM</li>
+          <li>People &amp; Culture</li>
+          <li>Operations Excellence</li>
+          <li>Project Development &amp; Opening</li>
+          <li>Procurement &amp; Supply Chain</li>
+          <li>Technology, Data &amp; Systems</li>
+        </ol>
+      </div>
+
+      <div class="panel panel--vision" data-panel="0.875,1.01">
+        <p class="kicker"><span>06</span>Future Vision</p>
+        <h2 class="panel__title">A leading hospitality platform, recognized for innovation, operational excellence and distinctive guest experiences.</h2>
+        <a class="cta" href="#dossier">Read the dossier <i aria-hidden="true">↓</i></a>
+      </div>
+    </section>
+
+    <!-- the dossier: full text, readable, over a solid surface -->
+    <section class="dossier" id="dossier">
+      <div class="dossier__grid">
+        <p class="kicker"><span>07</span>Dossier</p>
+        <article class="dossier__block">
+          <h2>Introduction</h2>
+          <p>As the Group continues to expand its portfolio of hospitality concepts, the need for a clear organizational structure and an integrated operating model has become increasingly important. The Group currently manages multiple businesses with distinct identities and operational requirements, while sharing a common vision for growth, excellence, and long-term sustainability.</p>
+          <p>Through the creation of a dedicated Services Company operating under the guidance of the Holding Company, the Group is able to leverage shared expertise while preserving the individuality and entrepreneurial spirit of each brand. The structure is designed to centralize specialized services, improve operational efficiency, enhance collaboration between entities, and establish a scalable foundation for future expansion.</p>
+        </article>
+        <article class="dossier__block">
+          <h2>Structure</h2>
+          <dl class="dossier__table">
+            <div><dt>Holding Company</dt><dd>Sets the strategic direction and governance of the Group.</dd></div>
+            <div><dt>Services Company</dt><dd>Culinary &amp; Beverage · Creative &amp; Experience · Marketing &amp; CRM · People &amp; Culture · Operations Excellence · Project Development &amp; Opening · Procurement &amp; Supply Chain · Technology, Data &amp; Systems</dd></div>
+            <div><dt>Brands</dt><dd>DADA Restaurant · SAYAH Beachclub · DÉJÀ VU · M04 · RANDEZVOU</dd></div>
+          </dl>
+        </article>
+        <article class="dossier__block">
+          <h2>Future Vision</h2>
+          <p>The organizational structure has been designed to support both the current portfolio of businesses and future growth opportunities. As the organization expands, new hospitality concepts, restaurant brands, and complementary ventures can be integrated efficiently within a unified governance framework.</p>
+          <p>Through centralized expertise, disciplined oversight, and shared resources, the Group seeks to build a resilient and scalable organization capable of adapting to evolving market conditions while maintaining consistent standards across its portfolio.</p>
+          <p>As the platform matures, the Group may evaluate opportunities to extend selected capabilities beyond its internal portfolio, where such initiatives align with its long-term vision and create additional shareholder value.</p>
+          <p class="dossier__closing">Ultimately, the vision is a diversified ecosystem of hospitality brands operating under a unified strategic direction, while preserving the distinctive identity and character of each concept.</p>
+        </article>
+        <article class="dossier__block dossier__block--contact" id="contact">
+          <h2>Contact</h2>
+          <p>For partnerships, new concepts and opportunities across the DORR Group.</p>
+          <p class="mail"><span data-mail>hello@dorr.example</span><button type="button" data-copy>Copy</button></p>
+          <form class="form" data-form novalidate>
+            <div class="field"><label for="f-name">Name</label><input id="f-name" name="name" required autocomplete="name"></div>
+            <div class="field"><label for="f-email">Email</label><input id="f-email" name="email" type="email" required autocomplete="email"></div>
+            <div class="field field--wide"><label for="f-msg">Message</label><textarea id="f-msg" name="message" rows="3"></textarea></div>
+            <button class="send" type="submit">Send</button>
+            <p class="form__note" role="status" aria-live="polite" data-note></p>
+          </form>
+        </article>
+      </div>
+      <footer class="foot">
+        <span>© 2026 DORR Hospitality Group</span>
+        <span class="foot__credit">Music: “Rest Now” by Eugenio Mininni, Mixkit Stock Music Free License · Sound effects synthesised in the browser · Photographs from Unsplash (Unsplash License): Harli Marten, Wolfgang Hasselmann, Eddie Le Marquand, Marin Tulard, Ana Almao, Arlind Photography, Anastasiia Krutota, Daniel Chen, Matthieu Huang, Declan Sun, season youn, Aleksey Cherenkevich, Alex Kolundzija · Photographs are illustrative, not of the venues.</span>
+        <a href="#top">Back to the start ↑</a>
+      </footer>
+    </section>
+  </main>
+
+  <!-- menu: goes straight to a chapter -->
+  <div class="menu" id="menu" data-menu role="dialog" aria-modal="true" aria-label="Menu" hidden>
+    <div class="menu__panel">
+      <header class="menu__head">
+        <p class="kicker"><span>☰</span>Chapters</p>
+        <button class="sheet__close" type="button" data-menu-close>Close <i aria-hidden="true">✕</i></button>
+      </header>
+      <ol class="menu__list">
+        <li><button type="button" data-goto="0"><span>01</span>The Shell</button></li>
+        <li><button type="button" data-goto="1"><span>02</span>The Holding</button></li>
+        <li><button type="button" data-goto="2"><span>03</span>The Pearl</button></li>
+        <li><button type="button" data-goto="3"><span>04</span>The Portfolio</button>
+          <ol class="menu__sub">
+            <li><button type="button" data-goto-brand="0">DADA</button></li>
+            <li><button type="button" data-goto-brand="1">SAYAH</button></li>
+            <li><button type="button" data-goto-brand="2">DÉJÀ VU</button></li>
+            <li><button type="button" data-goto-brand="3">M04</button></li>
+            <li><button type="button" data-goto-brand="4">RANDEZVOU</button></li>
+          </ol>
+        </li>
+        <li><button type="button" data-goto="4"><span>05</span>Services Company</button></li>
+        <li><button type="button" data-goto="5"><span>06</span>Future Vision</button></li>
+        <li><button type="button" data-goto="dossier"><span>07</span>Dossier &amp; contact</button></li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- inside a pearl (3D version): the camera flies into the points and lines -->
+  <div class="inside" data-inside role="dialog" aria-modal="true" aria-labelledby="in-title" hidden>
+    <div class="inside__frame">
+      <header class="inside__head">
+        <p class="kicker"><span data-in-num>01</span><span data-in-kicker>Inside the pearl</span></p>
+        <button class="inside__back" type="button" data-in-back><i aria-hidden="true">←</i> Back</button>
+      </header>
+      <div class="inside__body">
+        <div class="inside__text">
+          <h2 class="inside__name" id="in-title" data-in-name>DORR</h2>
+          <p class="inside__type" data-in-type>Hospitality Group</p>
+          <div class="inside__copy" data-in-copy></div>
+        </div>
+        <div class="inside__media" data-in-media></div>
+      </div>
+      <footer class="inside__nav">
+        <button type="button" data-in-prev><i aria-hidden="true">←</i> <span data-in-prev-name></span></button>
+        <button type="button" data-in-next><span data-in-next-name></span> <i aria-hidden="true">→</i></button>
+      </footer>
+    </div>
+  </div>
+  <div class="veil" data-veil aria-hidden="true"></div>
+
+  <!-- the pearl, opened: the Group -->
+  <div class="sheet sheet--dorr" data-sheet="dorr" role="dialog" aria-modal="true" aria-labelledby="dorr-title" hidden>
+    <div class="sheet__panel">
+      <header class="sheet__head">
+        <p class="kicker"><span>00</span>The pearl</p>
+        <button class="sheet__close" type="button" data-close>Close <i aria-hidden="true">✕</i></button>
+      </header>
+      <h2 class="sheet__name" id="dorr-title">DORR</h2>
+      <p class="sheet__type">Hospitality Group</p>
+      <div class="sheet__body">
+        <p>As the Group continues to expand its portfolio of hospitality concepts, the need for a clear organizational structure and an integrated operating model has become increasingly important. The Group currently manages multiple businesses with distinct identities and operational requirements, while sharing a common vision for growth, excellence, and long-term sustainability.</p>
+        <p>Through the creation of a dedicated Services Company operating under the guidance of the Holding Company, the Group is able to leverage shared expertise while preserving the individuality and entrepreneurial spirit of each brand.</p>
+      </div>
+      <p class="kicker sheet__sub">Structure</p>
+      <ol class="tree">
+        <li><span>01</span><b>Holding Company</b><em>Sets the strategic direction and governance of the Group.</em></li>
+        <li><span>02</span><b>Services Company</b><em>Eight disciplines: Culinary &amp; Beverage · Creative &amp; Experience · Marketing &amp; CRM · People &amp; Culture · Operations Excellence · Project Development &amp; Opening · Procurement &amp; Supply Chain · Technology, Data &amp; Systems</em></li>
+        <li><span>03</span><b>Five brands</b><em>DADA Restaurant · SAYAH Beachclub · DÉJÀ VU · M04 · RANDEZVOU</em></li>
+      </ol>
+      <footer class="sheet__foot">
+        <button class="cta" type="button" data-goto-brands>See the five brands <i aria-hidden="true">↓</i></button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- a brand pearl, opened -->
+  <div class="sheet sheet--brand" data-sheet="brand" role="dialog" aria-modal="true" aria-labelledby="brand-title" hidden>
+    <div class="sheet__panel">
+      <header class="sheet__head">
+        <p class="kicker"><span data-b-num>01</span><span data-b-of>/ 05 · The Portfolio</span></p>
+        <button class="sheet__close" type="button" data-close>Close <i aria-hidden="true">✕</i></button>
+      </header>
+      <h2 class="sheet__name" id="brand-title" data-b-name>DADA</h2>
+      <p class="sheet__type" data-b-type>Restaurant</p>
+      <figure class="sheet__fig" data-b-fig><img data-b-img alt="" width="1400" height="933"></figure>
+      <div class="sheet__body"><p data-b-text></p></div>
+      <dl class="sheet__meta">
+        <div><dt>Part of</dt><dd>DORR Hospitality Group</dd></div>
+        <div><dt>Supported by</dt><dd>The Services Company · 8 disciplines</dd></div>
+        <div><dt>Governance</dt><dd>The Holding Company</dd></div>
+        <div data-b-build-row hidden><dt>Drawn as</dt><dd data-b-build></dd></div>
+      </dl>
+      <div class="sheet__index">
+        <p class="kicker"><span>05</span>The Portfolio</p>
+        <ol data-b-index>
+          <li><button type="button"><span>01</span>DADA</button></li>
+          <li><button type="button"><span>02</span>SAYAH</button></li>
+          <li><button type="button"><span>03</span>DÉJÀ VU</button></li>
+          <li><button type="button"><span>04</span>M04</button></li>
+          <li><button type="button"><span>05</span>RANDEZVOU</button></li>
+        </ol>
+      </div>
+      <footer class="sheet__foot sheet__nav">
+        <button type="button" data-prev><i aria-hidden="true">←</i> <span data-prev-name>RANDEZVOU</span></button>
+        <button type="button" data-next><span data-next-name>SAYAH</span> <i aria-hidden="true">→</i></button>
+      </footer>
+    </div>
+  </div>
+
+  <script src="../vendor/js/gsap.min.js"></script>
+  <script src="../vendor/js/ScrollTrigger.min.js"></script>
+  <script src="../vendor/js/lenis.min.js"></script>
+  <script type="module" src="js/main.js?v=20261030v10"></script>
+  <script>
+    if ('serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+  </script>
+</body>
+</html>
