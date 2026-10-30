@@ -34,3 +34,10 @@ Published with GitHub Pages from the `main` branch.
 - Loader where a pearl forms its growth rings and the screen parts along a scalloped seam
 - Hero photo in a pearl oval, the structure as nacre layers (Holding at the centre, eight departments, five brands)
 - Scalloped shell cards, a brand index with an oval preview, Future Vision in a growing pearl, a separate contact page
+
+## Version 4 (`v4/`)
+"The pearl is DORR": one continuous 3D scroll film (three.js, self-hosted). Open `v4/index.html`.
+- One crafted shell resting on still water, light glowing through its joints; scrolling opens it on its hinge
+- The DORR pearl inside: tap it for the group introduction and structure
+- Five brand pearls built from points and lines, each a different construction; tap one for its full sheet
+- The eight disciplines as beads on a thread of light, Future Vision as an orrery, then the readable dossier

@@ -1,0 +1,23 @@
+/* DORR v4 — self-hosted type. Archivo (variable: wght 100–900, wdth 62–125) + IBM Plex Mono 400/500. */
+@font-face {
+  font-family: "Archivo";
+  src: url("../../vendor/fonts/archivo-latin-standard-normal.woff2") format("woff2");
+  font-weight: 100 900;
+  font-stretch: 62% 125%;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("../../vendor/fonts/ibm-plex-mono-latin-400-normal.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("../../vendor/fonts/ibm-plex-mono-latin-500-normal.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
