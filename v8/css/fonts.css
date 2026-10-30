@@ -1,0 +1,16 @@
+/* DORR v8 — local type. Michroma stands in for a wide, signage-born grotesk (labels, UI, woven wordmark);
+   Marcellus for a flared, carved roman (headings, numerals, reading text). Both SIL OFL, self-hosted. */
+@font-face {
+  font-family: "Michroma";
+  src: url("../../vendor/fonts/michroma-latin-400-normal.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Marcellus";
+  src: url("../../vendor/fonts/marcellus-latin-400-normal.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}

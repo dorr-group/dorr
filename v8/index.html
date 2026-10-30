@@ -1,0 +1,477 @@
+<!doctype html>
+<!--
+  DORR — Version 8 · "Loom"
+  A close study of Son Daven (sondaven.com, The First The Last, Awwwards Site of the Month) in material and motion,
+  re-made from scratch for DORR with our own colours (sea-ink + nacre), copy and photographs.
+
+  Son Daven signature traits observed (frame captures + its public scripts) → how v8 implements each one:
+  01 Loom-thread image rendering: pictures drawn as a grid of vertical threads whose width follows darkness,
+     two-tone, dark/empty areas cut out → js/loom.js, own WebGL1 shader (cell sampling, per-column jitter,
+     wool tone variation, wind sway, cursor "combing"), used for the loader object, hero foreground, prologue
+     scenes, every content photo (woven → photo on reveal, unweaves around the cursor) and the footer landscape.
+  02 Woven wordmark: giant wide-grotesk name built from warp threads with ragged fringe top and bottom
+     → js/weave.js builds an SVG of thread runs from the rendered glyphs; columns weave in from alternate ends.
+  03 Preloader: dark ground, threaded object centred, tiny wide-sans corner notes, percent, giant woven name at
+     the foot; the name then FLIPs into the hero title while the hero eases from scale 1.5 → 1.
+  04 Thread-gradient section seams: dark and light bands meet through a stepped ramp of thinning threads
+     (generated at runtime as a CSS mask, so no heavy SVG ships).
+  05 Two-colour banding: sections alternate a dark ground and a muted light ground; header flips theme per band.
+  06 Motion tokens: eases Out (.25,1,.5,1), InOut (.76,0,.24,1), In (.5,0,.75,0); durations 1.2 / .8 / .4 s;
+     stagger .1; reveal delay .2 — all reproduced as our own cubic-bezier functions for GSAP.
+  07 Heading words scatter in: alternating yPercent −150/75/−75/150 from scale 0, random order.
+  08 Paragraph lines rise from yPercent 250; rules wipe in with clip-path; blocks lift from yPercent 100.
+  09 Scrubbed character highlight (opacity .1 → 1) on the prologue statement.
+  10 Hero exit: title rises, halves and fades; the whole hero frame then shrinks toward .3 into the dark ground.
+  11 Parallax: images drift −20% → 20% inside frames; giant headline lines slide in opposing directions.
+  12 Header hides on scroll-down past 1000px, returns on scroll-up, gains a ground after 1000px.
+  13 Nav hover: label characters scatter out while a twin set scatters in (random stagger).
+  14 Menu: full-screen ground revealed by a woven mask sweep; burger lines cross; hovered item keeps 1, others .2.
+  15 "Dither" transition: a 20×12 grid of cells closes from the far corner, the page jumps, the cells open again.
+  16 Magnetic round CTA with elastic return (elastic.out(1, .3), 1.6 s).
+  17 Pinned horizontal card rail with cards that tilt and drift on randomised paths as they cross the screen.
+  18 Marquee whose speed follows scroll velocity.
+  19 Form success flips the card on Y (rotateY −180 / 180).
+  20 Equaliser of thin bars breathing (scaleY yoyo) as a quiet ambient cue; paper/fabric grain on light grounds;
+     inverted label chips; cards with a double rule under the title.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>DORR Hospitality Group — Version 8</title>
+<meta name="description" content="DORR Hospitality Group: one Holding Company, one Services Company with eight disciplines, and five brands, each with its own character.">
+<meta name="theme-color" content="#141a1b">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="DORR 8">
+<link rel="preload" href="../vendor/fonts/michroma-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../vendor/fonts/marcellus-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="img/hero.webp" as="image" type="image/webp">
+<link rel="stylesheet" href="css/fonts.css">
+<link rel="stylesheet" href="css/main.css">
+<script>
+  (function () {
+    var d = document.documentElement;
+    d.classList.add('js');
+    try { if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) d.classList.add('rm'); } catch (e) {}
+    try { if (sessionStorage.getItem('dorr8-visited')) d.classList.add('revisit'); } catch (e) {}
+    setTimeout(function () { if (!window.DORR_OK) d.classList.remove('js'); }, 6000);
+  })();
+</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<!-- Preloader (only shown when scripts run) -->
+<div class="loader" data-loader aria-hidden="true">
+  <div class="loader__top">
+    <div class="loader__mark"><span class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span></div>
+    <p class="t-label">Every house keeps a pearl<br>Welcome to DORR</p>
+  </div>
+  <div class="loader__object">
+    <img src="img/oyster.webp" alt="" width="900" height="900" decoding="async">
+    <canvas data-loom="oyster"></canvas>
+  </div>
+  <div class="loader__foot">
+    <div class="loader__notes">
+      <p class="t-label">Hospitality<br>Group — Holding</p>
+      <p class="t-label t-right"><span data-percent>000</span>%<br>Weaving the house, please wait</p>
+    </div>
+    <div class="loader__wordslot" data-loader-slot></div>
+  </div>
+</div>
+
+<!-- "Dither" transition grid -->
+<div class="dither" data-dither aria-hidden="true"></div>
+
+<header class="hd" data-header>
+  <div class="hd__ground" data-header-ground></div>
+  <div class="hd__left">
+    <button class="burger" type="button" data-menu-open aria-expanded="false" aria-controls="menu">
+      <span class="burger__lines" aria-hidden="true"><i></i><i></i></span>
+      <span class="swap" data-swap><span class="swap__a">Menu</span><span class="swap__b" aria-hidden="true">Menu</span></span>
+    </button>
+    <a class="hd__link swap" data-swap href="#dossier"><span class="swap__a">Dossier</span><span class="swap__b" aria-hidden="true">Dossier</span></a>
+  </div>
+  <a class="hd__logo" href="#top" aria-label="DORR — back to the start">
+    <span class="hd__logo-text">DORR</span>
+    <span class="hd__logo-weave" data-weave="logo" aria-hidden="true"></span>
+  </a>
+  <div class="hd__right">
+    <span class="hd__lang t-label" aria-label="Language: English">EN</span>
+    <a class="pill swap" data-swap href="#contact"><span class="swap__a">Contact</span><span class="swap__b" aria-hidden="true">Contact</span></a>
+  </div>
+</header>
+
+<!-- Menu -->
+<div class="menu" id="menu" data-menu role="dialog" aria-modal="true" aria-label="Menu" hidden>
+  <div class="menu__grain"></div>
+  <div class="menu__inner">
+    <nav class="menu__nav" aria-label="Sections">
+      <ol>
+        <li><a href="#prologue" data-menu-link><span class="t-label">01</span><span class="menu__word">Prologue</span></a></li>
+        <li><a href="#house" data-menu-link><span class="t-label">02</span><span class="menu__word">The house</span></a></li>
+        <li><a href="#structure" data-menu-link><span class="t-label">03</span><span class="menu__word">Structure</span></a></li>
+        <li><a href="#brands" data-menu-link><span class="t-label">04</span><span class="menu__word">Brands</span></a></li>
+        <li><a href="#vision" data-menu-link><span class="t-label">05</span><span class="menu__word">Vision</span></a></li>
+        <li><a href="#contact" data-menu-link><span class="t-label">06</span><span class="menu__word">Contact</span></a></li>
+      </ol>
+    </nav>
+    <div class="menu__aside">
+      <p class="t-label">Write to the group</p>
+      <a class="menu__mail" href="mailto:hello@dorr.example">hello@dorr.example</a>
+      <p class="t-label menu__small">One Holding. One Services Company.<br>Five brands, each with its own character.</p>
+    </div>
+  </div>
+</div>
+
+<main id="main">
+
+  <!-- 01 HERO -->
+  <section class="hero" id="top" data-theme="photo" aria-label="DORR Hospitality Group">
+    <div class="hero__sticky">
+      <div class="hero__frame" data-hero-frame>
+        <div class="hero__media" data-hero-media>
+          <picture>
+            <source media="(max-width: 700px)" srcset="img/hero-m.webp" width="1000" height="1250">
+            <img src="img/hero.webp" alt="Golden morning fog rolling over a headland above the sea" width="1920" height="1280" fetchpriority="high" decoding="async">
+          </picture>
+        </div>
+        <div class="hero__shade" aria-hidden="true"></div>
+
+        <div class="hero__content" data-hero-content>
+          <div class="hero__row">
+            <div class="hero__titlewrap">
+              <p class="t-label hero__kicker" data-r="ctn">Hospitality group</p>
+              <h1 class="hero__title">
+                <span class="hero__title-text">DORR</span>
+                <span class="hero__title-weave" data-weave="hero" aria-hidden="true"></span>
+              </h1>
+            </div>
+            <dl class="hero__stats">
+              <div><dt class="t-label">Holding company</dt><dd><small>one</small>1</dd></div>
+              <div><dt class="t-label">Service disciplines</dt><dd><small>eight</small>8</dd></div>
+              <div><dt class="t-label">Brands</dt><dd><small>five</small>5</dd></div>
+            </dl>
+          </div>
+
+          <div class="hero__bottom">
+            <div>
+              <p class="hero__lead" data-r="h">One holding. One services company. Five brands.</p>
+              <ul class="chips" data-r="ctn">
+                <li><span class="chip">Holding</span><span class="t-label">Strategic direction &amp; governance</span></li>
+                <li><span class="chip">Services</span><span class="t-label">Eight disciplines, one standard</span></li>
+              </ul>
+            </div>
+            <a class="orb" href="#contact" data-magnetic><span data-magnetic-inner>Write to<br>the house</span></a>
+          </div>
+          <div class="hero__cue t-label"><span class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>Scroll</div>
+        </div>
+      </div>
+      <div class="hero__over" data-hero-over aria-hidden="true">
+        <div class="hero__land">
+          <img src="img/mist.webp" alt="" width="1600" height="900" decoding="async">
+          <canvas data-loom="land"></canvas>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 02 PROLOGUE -->
+  <section class="prologue band band--ink" id="prologue" data-theme="dark">
+    <div class="prologue__scene prologue__scene--l" aria-hidden="true">
+      <img src="img/oyster.webp" alt="" width="900" height="900" loading="lazy" decoding="async">
+      <canvas data-loom="prologue-l"></canvas>
+    </div>
+    <div class="prologue__scene prologue__scene--r" aria-hidden="true">
+      <img src="img/oyster.webp" alt="" width="900" height="900" loading="lazy" decoding="async">
+      <canvas data-loom="prologue-r"></canvas>
+    </div>
+    <div class="prologue__inner">
+      <p class="t-label orn" data-r="ctn">Prologue</p>
+      <p class="prologue__quote" data-highlight>“The shell protects. The pearl shines. Under one roof, every house keeps its own light — and shares the craft that keeps it burning.”</p>
+      <p class="t-small prologue__text" data-r="p">As the Group expands its portfolio of hospitality concepts, DORR brings every brand into one clear organizational structure and an integrated operating model, sharing expertise while preserving the individuality and entrepreneurial spirit of each.</p>
+      <a class="link-line" href="#dossier"><span>Read the dossier</span></a>
+    </div>
+    <div class="seam seam--to-nacre" aria-hidden="true"></div>
+  </section>
+
+  <!-- 03 THE HOUSE -->
+  <section class="house band band--nacre" id="house" data-theme="light">
+    <div class="house__head">
+      <h2 class="mega" data-drift>
+        <span>The house</span>
+        <span>of DORR</span>
+      </h2>
+      <p class="t-label house__by">by the Group</p>
+    </div>
+
+    <div class="house__grid" id="dossier">
+      <div class="house__col">
+        <h3 class="sub" data-r="h">Introduction</h3>
+        <span class="dbl" data-r="line"></span>
+        <p class="t-read" data-r="p">As the Group continues to expand its portfolio of hospitality concepts, the need for a clear organizational structure and an integrated operating model has become increasingly important. The Group currently manages multiple businesses with distinct identities and operational requirements, while sharing a common vision for growth, excellence, and long-term sustainability.</p>
+        <a class="pill pill--ink swap" data-swap href="#contact"><span class="swap__a">Write to us</span><span class="swap__b" aria-hidden="true">Write to us</span></a>
+      </div>
+      <div class="house__col">
+        <h3 class="sub" data-r="h">The model</h3>
+        <span class="dbl" data-r="line"></span>
+        <p class="t-read" data-r="p">Through the creation of a dedicated Services Company operating under the guidance of the Holding Company, the Group is able to leverage shared expertise while preserving the individuality and entrepreneurial spirit of each brand. The structure is designed to centralize specialized services, improve operational efficiency, enhance collaboration between entities, and establish a scalable foundation for future expansion.</p>
+        <p class="t-read t-quiet" data-r="p">A clear structure for every house, and room for each to keep its own voice.</p>
+      </div>
+    </div>
+
+    <div class="house__figure" data-scale-wrap>
+      <figure class="weft frame" data-weft>
+        <div class="weft__scale" data-scale>
+          <img src="img/intro.webp" alt="A long reflecting pool beside white terraces with loungers at dusk" width="1500" height="1125" loading="lazy" decoding="async">
+          <canvas data-loom="photo" data-fg="#141a1b" data-bg="#c9bfad"></canvas>
+        </div>
+      </figure>
+      <p class="t-label house__cap">Move across the picture to unweave it</p>
+    </div>
+
+    <div class="shell">
+      <h3 class="shell__title" data-r="h">What the shell is for</h3>
+      <ol class="shell__list">
+        <li><span class="rule" data-r="line"></span><span class="t-label">01</span><strong>Stronger governance</strong><span class="t-small">Clear oversight across every entity.</span></li>
+        <li><span class="rule" data-r="line"></span><span class="t-label">02</span><strong>Optimized resources</strong><span class="t-small">Shared expertise, used where it adds most.</span></li>
+        <li><span class="rule" data-r="line"></span><span class="t-label">03</span><strong>Room to innovate</strong><span class="t-small">A structure that supports new ideas.</span></li>
+        <li><span class="rule" data-r="line"></span><span class="t-label">04</span><strong>Agility &amp; consistency</strong><span class="t-small">The same standard, everywhere.</span></li>
+      </ol>
+    </div>
+    <div class="seam seam--to-ink" aria-hidden="true"></div>
+  </section>
+
+  <!-- 04 STRUCTURE -->
+  <section class="structure band band--ink" id="structure" data-theme="dark">
+    <div class="structure__head">
+      <p class="t-label orn" data-r="ctn">Structure</p>
+      <h2 class="title" data-r="h">Three floors, one house</h2>
+    </div>
+
+    <ol class="tiers">
+      <li class="tier">
+        <span class="tier__no">01</span>
+        <span class="tier__name" data-r="h">Holding Company</span>
+        <span class="t-small tier__desc" data-r="p">Sets the strategic direction and governance of the Group.</span>
+      </li>
+      <li class="tier">
+        <span class="tier__no">02</span>
+        <span class="tier__name" data-r="h">Services Company</span>
+        <span class="t-small tier__desc" data-r="p">Centralizes specialized services across eight disciplines, sharing expertise between every brand.</span>
+      </li>
+      <li class="tier">
+        <span class="tier__no">03</span>
+        <span class="tier__name" data-r="h">Five brands</span>
+        <span class="t-small tier__desc" data-r="p">DADA Restaurant · SAYAH Beachclub · DÉJÀ VU · M04 · RANDEZVOU</span>
+      </li>
+    </ol>
+
+    <div class="services">
+      <div class="services__media">
+        <figure class="weft weft--tall frame" data-weft>
+          <div class="weft__scale" data-parallax>
+            <img src="img/chef.webp" alt="A chef seasoning a plated dish in a dark kitchen" width="1100" height="1375" loading="lazy" decoding="async">
+            <canvas data-loom="photo" data-fg="#d6cdbd" data-bg="#141a1b"></canvas>
+          </div>
+        </figure>
+      </div>
+      <div class="services__list">
+        <p class="t-label" data-r="ctn">The Services Company</p>
+        <h3 class="title title--sm" data-r="h">Eight disciplines, one standard</h3>
+        <ol class="disciplines" data-dim-group>
+          <li data-dim><span class="t-label">01</span><span class="disc">Culinary &amp; Beverage</span></li>
+          <li data-dim><span class="t-label">02</span><span class="disc">Creative &amp; Experience</span></li>
+          <li data-dim><span class="t-label">03</span><span class="disc">Marketing &amp; CRM</span></li>
+          <li data-dim><span class="t-label">04</span><span class="disc">People &amp; Culture</span></li>
+          <li data-dim><span class="t-label">05</span><span class="disc">Operations Excellence</span></li>
+          <li data-dim><span class="t-label">06</span><span class="disc">Project Development &amp; Opening</span></li>
+          <li data-dim><span class="t-label">07</span><span class="disc">Procurement &amp; Supply Chain</span></li>
+          <li data-dim><span class="t-label">08</span><span class="disc">Technology, Data &amp; Systems</span></li>
+        </ol>
+      </div>
+    </div>
+    <div class="seam seam--to-nacre" aria-hidden="true"></div>
+  </section>
+
+  <!-- 05 BRANDS -->
+  <section class="brands band band--nacre" id="brands" data-theme="light">
+    <div class="brands__intro">
+      <p class="t-label orn" data-r="ctn">The portfolio</p>
+      <div class="brands__titlewrap" data-brands-title>
+        <h2 class="mega mega--center"><span>Five brands,</span><span>each with its</span><span>own character</span></h2>
+      </div>
+    </div>
+    <div class="rail" data-rail>
+      <div class="rail__track" data-rail-track>
+        <article class="card" data-card>
+          <figure class="weft">
+            <img src="img/dada.webp" alt="A warm restaurant corner with a woven pendant over a round table" width="1000" height="1250" loading="lazy" decoding="async">
+            <canvas data-loom="photo" data-fg="#141a1b" data-bg="#c9bfad"></canvas>
+          </figure>
+          <div class="card__meta"><span class="t-label">01 / 05</span><span class="t-label">Restaurant</span></div>
+          <h3 class="card__name">DADA</h3>
+          <div class="card__rules" aria-hidden="true"></div>
+          <p class="t-small">DADA Restaurant. Part of DORR Hospitality Group.</p>
+        </article>
+        <article class="card" data-card>
+          <figure class="weft">
+            <img src="img/sayah.webp" alt="Woven lamps framing a beach of white parasols at sunset" width="1000" height="1250" loading="lazy" decoding="async">
+            <canvas data-loom="photo" data-fg="#141a1b" data-bg="#c9bfad"></canvas>
+          </figure>
+          <div class="card__meta"><span class="t-label">02 / 05</span><span class="t-label">Beachclub</span></div>
+          <h3 class="card__name">SAYAH</h3>
+          <div class="card__rules" aria-hidden="true"></div>
+          <p class="t-small">SAYAH Beachclub. Part of DORR Hospitality Group.</p>
+        </article>
+        <article class="card" data-card>
+          <figure class="weft">
+            <img src="img/dejavu.webp" alt="A cocktail on a wooden table in a shaft of warm light" width="1000" height="1250" loading="lazy" decoding="async">
+            <canvas data-loom="photo" data-fg="#141a1b" data-bg="#c9bfad"></canvas>
+          </figure>
+          <div class="card__meta"><span class="t-label">03 / 05</span><span class="t-label">Concept</span></div>
+          <h3 class="card__name">DÉJÀ VU</h3>
+          <div class="card__rules" aria-hidden="true"></div>
+          <p class="t-small">A DORR hospitality concept.</p>
+        </article>
+        <article class="card" data-card>
+          <figure class="weft">
+            <img src="img/m04.webp" alt="An old fashioned with orange peel on a dark marble bar" width="1000" height="1250" loading="lazy" decoding="async">
+            <canvas data-loom="photo" data-fg="#141a1b" data-bg="#c9bfad"></canvas>
+          </figure>
+          <div class="card__meta"><span class="t-label">04 / 05</span><span class="t-label">Concept</span></div>
+          <h3 class="card__name">M04</h3>
+          <div class="card__rules" aria-hidden="true"></div>
+          <p class="t-small">A DORR hospitality concept.</p>
+        </article>
+        <article class="card" data-card>
+          <figure class="weft">
+            <img src="img/randezvou.webp" alt="A bowl of lemons on a white terrace table above a blue bay" width="1000" height="1250" loading="lazy" decoding="async">
+            <canvas data-loom="photo" data-fg="#141a1b" data-bg="#c9bfad"></canvas>
+          </figure>
+          <div class="card__meta"><span class="t-label">05 / 05</span><span class="t-label">Concept</span></div>
+          <h3 class="card__name">RANDEZVOU</h3>
+          <div class="card__rules" aria-hidden="true"></div>
+          <p class="t-small">A DORR hospitality concept.</p>
+        </article>
+      </div>
+    </div>
+    <div class="marquee" data-marquee aria-hidden="true">
+      <div class="marquee__list" data-marquee-list><span>DADA</span><i></i><span>SAYAH</span><i></i><span>DÉJÀ VU</span><i></i><span>M04</span><i></i><span>RANDEZVOU</span><i></i></div>
+      <div class="marquee__list" data-marquee-list><span>DADA</span><i></i><span>SAYAH</span><i></i><span>DÉJÀ VU</span><i></i><span>M04</span><i></i><span>RANDEZVOU</span><i></i></div>
+    </div>
+    <div class="seam seam--to-ink" aria-hidden="true"></div>
+  </section>
+
+  <!-- 06 VISION -->
+  <section class="vision band band--ink" id="vision" data-theme="dark">
+    <div class="vision__pin" data-vision>
+      <div class="vision__media">
+        <picture>
+          <source media="(max-width: 700px)" srcset="img/vision-m.webp" width="900" height="1600">
+          <img src="img/vision.webp" alt="An infinity pool running toward misty mountains" width="1920" height="1200" loading="lazy" decoding="async">
+        </picture>
+        <canvas data-loom="vision" data-fg="#d6cdbd" data-bg="#141a1b"></canvas>
+      </div>
+      <div class="vision__veil" aria-hidden="true"></div>
+      <div class="vision__statement">
+        <p class="t-label orn orn--left">Future vision</p>
+        <p class="vision__line" data-r="h">A leading hospitality platform, recognized for innovation, operational excellence and distinctive guest experiences.</p>
+      </div>
+    </div>
+    <div class="vision__text">
+      <div class="vision__cols">
+        <p class="t-read" data-r="p">The organizational structure has been designed to support both the current portfolio of businesses and future growth opportunities. As the organization expands, new hospitality concepts, restaurant brands, and complementary ventures can be integrated efficiently within a unified governance framework.</p>
+        <p class="t-read" data-r="p">Through centralized expertise, disciplined oversight, and shared resources, the Group seeks to build a resilient and scalable organization capable of adapting to evolving market conditions while maintaining consistent standards across its portfolio.</p>
+        <p class="t-read" data-r="p">As the platform matures, the Group may evaluate opportunities to extend selected capabilities beyond its internal portfolio, where such initiatives align with its long-term vision and create additional shareholder value.</p>
+        <p class="t-read" data-r="p">Ultimately, the vision is a diversified ecosystem of hospitality brands operating under a unified strategic direction, while preserving the distinctive identity and character of each concept.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 07 CONTACT -->
+  <section class="contact band band--ink" id="contact" data-theme="dark">
+    <div class="contact__grid">
+      <div class="contact__head">
+        <p class="t-label orn orn--left" data-r="ctn">Contact</p>
+        <h2 class="title" data-r="h">Become part of the house</h2>
+        <p class="t-read" data-r="p">For partnerships, new concepts and opportunities across the DORR Group.</p>
+        <div class="mailrow" data-r="ctn">
+          <a class="mailrow__mail" href="mailto:hello@dorr.example">hello@dorr.example</a>
+          <button class="pill pill--line" type="button" data-copy="hello@dorr.example">Copy</button>
+          <span class="t-label mailrow__status" data-copy-status role="status" aria-live="polite"></span>
+        </div>
+      </div>
+      <div class="flip" data-flip>
+        <form class="sheet flip__front" data-form novalidate>
+          <div class="sheet__head"><span class="sheet__title">Write to DORR</span><span class="t-label">[ 01 ]</span></div>
+          <div class="sheet__rules" aria-hidden="true"></div>
+          <label class="field"><span class="t-label">Name</span><input name="name" type="text" autocomplete="name" required></label>
+          <label class="field"><span class="t-label">Email</span><input name="email" type="email" autocomplete="email" required></label>
+          <label class="field"><span class="t-label">Message</span><textarea name="message" rows="3" required></textarea></label>
+          <p class="t-label sheet__error" data-form-error role="alert"></p>
+          <button class="pill pill--ink sheet__send" type="submit">Send</button>
+        </form>
+        <div class="sheet sheet--done flip__back" data-done tabindex="-1" aria-live="polite">
+          <div class="sheet__head"><span class="sheet__title">Thank you</span><span class="t-label">[ 02 ]</span></div>
+          <div class="sheet__rules" aria-hidden="true"></div>
+          <p class="t-read">Your note is woven in. This is a preview edition, so nothing was sent — please write to <a href="mailto:hello@dorr.example">hello@dorr.example</a>.</p>
+          <button class="pill pill--line" type="button" data-form-reset>Write another</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<aside class="notice" data-notice aria-label="Preview notice" hidden>
+  <div class="notice__head"><span class="notice__title">Preview</span><button type="button" class="notice__x" data-notice-close aria-label="Close notice">[X]</button></div>
+  <div class="notice__rules" aria-hidden="true"></div>
+  <p class="t-small">A design preview of the DORR website. No cookies, no tracking.</p>
+  <button type="button" class="notice__ok t-label" data-notice-close>OK</button>
+</aside>
+
+<footer class="ft band band--ink" data-theme="dark">
+  <div class="ft__scene" aria-hidden="true">
+    <img src="img/mist.webp" alt="" width="1600" height="900" loading="lazy" decoding="async">
+    <canvas data-loom="footer"></canvas>
+  </div>
+  <div class="ft__inner">
+    <div class="ft__cols">
+      <div>
+        <p class="t-label">DORR Hospitality Group</p>
+        <p class="t-small">Holding Company · Services Company · DADA Restaurant · SAYAH Beachclub · DÉJÀ VU · M04 · RANDEZVOU</p>
+      </div>
+      <div>
+        <p class="t-label">Write</p>
+        <a class="t-small" href="mailto:hello@dorr.example">hello@dorr.example</a>
+      </div>
+      <div>
+        <p class="t-label">Photographs</p>
+        <p class="t-small ft__credits">Unsplash — Dominik Mattern, Griffin Wooldridge, Mitili Mitili, Nahima Aparicio, Jason Leung, Decima Athens, Cassie Gallegos, Jakub Dziubak, Pylyp Sukhenko, Arlind Photography, Karsten Winegeart.</p>
+      </div>
+    </div>
+    <div class="ft__word">
+      <span class="ft__word-text" aria-hidden="true">DORR</span>
+      <span class="ft__word-weave" data-weave="footer" aria-hidden="true"></span>
+    </div>
+    <div class="ft__base">
+      <p class="t-label">© 2026 DORR Hospitality Group</p>
+      <a class="t-label link-line" href="#top"><span>Back to the start ↑</span></a>
+    </div>
+  </div>
+</footer>
+
+<script src="../vendor/js/gsap.min.js" defer></script>
+<script src="../vendor/js/ScrollTrigger.min.js" defer></script>
+<script src="../vendor/js/lenis.min.js" defer></script>
+<script src="js/weave.js" defer></script>
+<script src="js/loom.js" defer></script>
+<script src="js/main.js" defer></script>
+</body>
+</html>
