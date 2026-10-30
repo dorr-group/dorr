@@ -28,3 +28,9 @@ Published with GitHub Pages from the `main` branch.
 - The Holding Company is the clasp, the Services Company the thread, the five brands the pearls
 - Photos redrawn live as rows of shaded pearls on sagging threads (WebGL) that resolve into the photograph
 - A necklace that strings itself on scroll; brands beside one round viewer that re-strings for each
+
+## Version 7 (`v7/`)
+"The shell opens": an editorial pearl-and-shell site. Open `v7/index.html`.
+- Loader where a pearl forms its growth rings and the screen parts along a scalloped seam
+- Hero photo in a pearl oval, the structure as nacre layers (Holding at the centre, eight departments, five brands)
+- Scalloped shell cards, a brand index with an oval preview, Future Vision in a growing pearl, a separate contact page

@@ -1,0 +1,33 @@
+/* DORR v7 — self-hosted type (no runtime CDN)
+   Serif: Fraunces (soft optical axis — rounded, nacre-like terminals), used in mixed case
+   Sans: Jost (geometric, quiet) for text and labels
+   Arabic ornament: Amiri, subset to the single word دُر */
+@font-face {
+  font-family: "Dorr Serif";
+  src: url("../../vendor/fonts/fraunces-latin-full-normal.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Dorr Serif";
+  src: url("../../vendor/fonts/fraunces-latin-opsz-italic.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Dorr Sans";
+  src: url("../../vendor/fonts/jost-latin-wght-normal.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Dorr Arabic";
+  src: url("../../vendor/fonts/amiri-dorr-subset.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0600-06FF;
+}
