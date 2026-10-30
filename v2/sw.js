@@ -1,7 +1,7 @@
 /* DORR v2 — offline cache. Core files are stored on first visit; everything
    else is cached as it is used, so later visits open fast even on a weak connection. */
 const PREFIX = 'dorr-v2-';
-const CACHE = PREFIX + '2';
+const CACHE = PREFIX + '3';
 const CORE = ["./", "index.html", "manifest.webmanifest", "css/style.css", "css/fonts.css", "js/main.js", "js/particles.js", "img/events.jpg", "icons/icon-192.png", "icons/apple-touch-icon.png", "../vendor/js/gsap.min.js", "../vendor/js/ScrollTrigger.min.js", "../vendor/js/lenis.min.js", "../vendor/js/three.min.js", "../vendor/fonts/bodoni-moda-latin-standard-normal.woff2", "../vendor/fonts/bodoni-moda-latin-standard-italic.woff2", "../vendor/fonts/manrope-latin-wght-normal.woff2"];
 
 self.addEventListener('install', (e) => {

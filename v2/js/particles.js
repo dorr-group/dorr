@@ -14,9 +14,8 @@ window.DorrParticles = function (canvas, opts) {
     return null;
   }
   const coarse = window.matchMedia('(pointer: coarse)').matches;
-  const lowEnd = (navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory || 8) <= 4;
-  // capped pixel ratio: soft gold dust gains nothing from 3x buffers, phones pay for it in heat
-  const pixelRatio = () => Math.min(window.devicePixelRatio || 1, coarse || window.innerWidth < 700 ? 1.5 : 1.75);
+  // points are cheap: keep the crisp 2x sparkle of the gold dust (3x buffers add nothing)
+  const pixelRatio = () => Math.min(window.devicePixelRatio || 1, 2);
   let dpr = pixelRatio();
   renderer.setPixelRatio(dpr);
   renderer.setClearColor(0x000000, 0);
@@ -154,7 +153,7 @@ window.DorrParticles = function (canvas, opts) {
     camera.left = -W / 2; camera.right = W / 2; camera.top = H / 2; camera.bottom = -H / 2;
     camera.updateProjectionMatrix();
     ringR = opts.ringRadius(W, H);
-    count = Math.round((W < 700 ? 9000 : 22000) * (lowEnd ? 0.6 : 1));
+    count = W < 700 ? 9000 : 22000;
 
     const geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(count * 3), 3));
@@ -213,13 +212,23 @@ window.DorrParticles = function (canvas, opts) {
     renderer.render(scene, camera);
   };
 
-  // mouse/pen only: on touch the push would follow a scrolling finger and stay stuck where it lifted
   const onMove = (e) => {
     if (!running || e.pointerType === 'touch') return;
     mouse.cx = e.clientX; mouse.cy = e.clientY; mouse.dirty = true; mouse.tk = 1;
   };
   const onLeave = () => { mouse.tk = 0; };
   window.addEventListener('pointermove', onMove, { passive: true });
+  // touch: the dust parts around the finger while it moves (touchmove keeps firing during a
+  // scroll), and the push fades out softly once the finger lifts, so nothing stays stuck
+  const onTouch = (e) => {
+    if (!running || !e.touches.length) return;
+    const t = e.touches[0];
+    mouse.cx = t.clientX; mouse.cy = t.clientY; mouse.dirty = true; mouse.tk = 1;
+  };
+  window.addEventListener('touchstart', onTouch, { passive: true });
+  window.addEventListener('touchmove', onTouch, { passive: true });
+  window.addEventListener('touchend', (e) => { if (!e.touches.length) onLeave(); }, { passive: true });
+  window.addEventListener('touchcancel', onLeave, { passive: true });
   document.addEventListener('pointerleave', onLeave);
   window.addEventListener('blur', onLeave);
 

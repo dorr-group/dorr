@@ -103,6 +103,8 @@
   gsap.registerPlugin(ScrollTrigger);
   ScrollTrigger.config({ ignoreMobileResize: true });
   const mobile = () => window.innerWidth < 700;
+  // pacing: longer pinned scenes and a softer scrub so every scene unfolds slowly
+  const PACE = 1.4, SCRUB = 1.6;
   const find = (hash) => { try { return hash && hash.length > 1 ? $(hash) : null; } catch (e) { return null; } };
   const deepLink = find(location.hash);
 
@@ -111,7 +113,7 @@
   window.scrollTo(0, 0);
   if (window.Lenis) {
     // wheel is smoothed; touch keeps native scrolling (no syncTouch)
-    lenis = new Lenis({ lerp: 0.09, smoothWheel: true });
+    lenis = new Lenis({ lerp: 0.07, smoothWheel: true });
     lenis.on('scroll', ScrollTrigger.update);
     gsap.ticker.add((t) => lenis.raf(t * 1000));
     gsap.ticker.lagSmoothing(0);
@@ -225,7 +227,7 @@
     gsap.timeline({
       defaults: { ease: 'none' },
       scrollTrigger: {
-        trigger: '[data-hero]', start: 'top top', end: '+=200%', scrub: 1, pin: heroPin, anticipatePin: 1,
+        trigger: '[data-hero]', start: 'top top', end: () => `+=${heroPin.offsetHeight * 2 * PACE}`, scrub: SCRUB, pin: heroPin, anticipatePin: 1,
         onRefresh: () => { measureHero(); applyHero(); },
       },
     })
@@ -332,8 +334,8 @@
         tl.to({}, { duration: 0.6 });
       });
       ScrollTrigger.create({
-        trigger: '[data-chapters]', start: 'top top', end: () => `+=${chPin.offsetHeight * chs.length * 1.15}`,
-        pin: chPin, anticipatePin: 1, scrub: 1, animation: tl, invalidateOnRefresh: true,
+        trigger: '[data-chapters]', start: 'top top', end: () => `+=${chPin.offsetHeight * chs.length * 1.15 * PACE}`,
+        pin: chPin, anticipatePin: 1, scrub: SCRUB, animation: tl, invalidateOnRefresh: true,
       });
       syncCount();
     }
@@ -389,7 +391,7 @@
       ScrollTrigger.addEventListener('refresh', () => { measure(); place(); });
       gsap.timeline({
         defaults: { ease: 'none' },
-        scrollTrigger: { trigger: '[data-orbit]', start: 'top top', end: () => `+=${orbitPin.offsetHeight * 3.6}`, pin: orbitPin, anticipatePin: 1, scrub: 1, invalidateOnRefresh: true },
+        scrollTrigger: { trigger: '[data-orbit]', start: 'top top', end: () => `+=${orbitPin.offsetHeight * 3.6 * PACE}`, pin: orbitPin, anticipatePin: 1, scrub: SCRUB, invalidateOnRefresh: true },
       })
         .to({}, { duration: 0.12 })
         .to(o, { rot: -(n - 1) * step, duration: 1, onUpdate: place })
@@ -442,7 +444,7 @@
       gsap.timeline({
         defaults: { ease: 'none' },
         scrollTrigger: {
-          trigger: '[data-vision]', start: 'top top', end: '+=170%', pin: '[data-vision-pin]', anticipatePin: 1, scrub: 1,
+          trigger: '[data-vision]', start: 'top top', end: () => `+=${$('[data-vision-pin]').offsetHeight * 1.7 * PACE}`, pin: '[data-vision-pin]', anticipatePin: 1, scrub: SCRUB,
           invalidateOnRefresh: true, onRefresh: () => { measureV(); applyV(); },
         },
       })
