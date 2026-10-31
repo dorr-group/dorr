@@ -17,7 +17,7 @@ import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { mergeGeometries, mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
 import { Reflector } from 'three/addons/objects/Reflector.js';
-import { Sound } from './sound.js?v=20261031v10';
+import { Sound } from './sound.js?v=20261031v10b';
 
 const root = document.documentElement;
 const $ = (s, c = document) => c.querySelector(s);
@@ -968,6 +968,11 @@ async function main() {
     orrery.add(m);
     return { m, r: ORB[k < 2 ? 0 : 1], a0: k < 2 ? k * Math.PI + 0.6 : ((k - 2) * Math.PI * 2) / 3 + 1.4, sp: k < 2 ? 0.16 : 0.1 };
   });
+  const slots = Array.from({ length: 6 }, (_, k) => {
+    const m = new THREE.Mesh(new THREE.TorusGeometry(0.17, 0.007, 6, 48), glowMat);
+    orrery.add(m);
+    return { m, a0: (k * Math.PI * 2) / 6 + 0.3 };
+  });
   const qTmp = new THREE.Quaternion();
 
   /* ============================================================ dust / snow, everywhere */
@@ -1095,6 +1100,7 @@ async function main() {
   const pearlTag = mkTag('<span class="tag__box tag__box--ink" data-pearl-cta>Open the pearl ↗</span>');
   const bTag = mkTag('<span class="tag__row"><span class="tag__box" data-tb-num>01 / 05</span><span class="tag__box" data-tb-type>Restaurant</span></span><span class="tag__big" data-tb-name>DADA</span><span class="tag__txt" data-tb-text></span><span class="tag__row"><span class="tag__box tag__box--ink" data-tb-cta>Open ↗</span></span>', 'tag--c');
   const vTags = BRANDS.map((b) => mkTag(`<span class="tag__box">${b.name}</span>`));
+  const slotTag = mkTag('<span class="tag__tiny">Room for new concepts</span>');
   const tb = { num: $('[data-tb-num]'), type: $('[data-tb-type]'), name: $('[data-tb-name]'), text: $('[data-tb-text]'), cta: $('[data-tb-cta]') };
   const pearlCta = $('[data-pearl-cta]');
   const verb = coarse ? 'Tap' : 'Click';
@@ -1780,6 +1786,11 @@ async function main() {
         const o = orbs[k], a = o.a0 + time * o.sp + q * 1.6;
         o.m.position.set(Math.cos(a) * o.r, 0, Math.sin(a) * o.r);
       }
+      for (let k = 0; k < slots.length; k++) {
+        const a = slots[k].a0 + time * 0.05 + q * 0.8;
+        slots[k].m.position.set(Math.cos(a) * ORB[2], 0, Math.sin(a) * ORB[2]);
+        slots[k].m.quaternion.copy(qTmp);
+      }
       orrery.updateMatrixWorld();
       const vOn = sstep(0.87, 0.9, p);
       for (let k = 0; k < orbs.length; k++) {
@@ -1787,12 +1798,14 @@ async function main() {
         const vw = vTags[k].w || 70;
         place(vTags[k], Math.min(scr.x + 14, W - vw - 46), scr.y - 9, vOn * (tmpW.z > -0.5 ? 1 : 0.45));
       }
+      slots[0].m.getWorldPosition(tmpW); toScreen(tmpW);
+      place(slotTag, scr.x + 14, scr.y - 6, vOn * 0.9);
       bigPearl.getWorldPosition(tagPearl); toScreen(tagPearl); const cx = scr.x, cy = scr.y;
       right.setFromMatrixColumn(camera.matrixWorld, 0);
       tmpW.copy(tagPearl).addScaledVector(right, PR * 1.7); toScreen(tmpW);
       const rad = Math.hypot(scr.x - cx, scr.y - cy) * 1.3 + 16;
       placeRing(ringD, cx, cy, rad, -time * 4, vOn, repeatTxt(visRingTxt, rad));
-    } else { hide(vTags); placeRing(ringD, 0, 0, 0, 0, 0, ''); }
+    } else { hide(vTags); place(slotTag, 0, 0, 0); placeRing(ringD, 0, 0, 0, 0, 0, ''); }
 
     // hover (mouse only)
     if (ptr.moved && !SH.kind) {

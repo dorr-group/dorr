@@ -1,13 +1,13 @@
 /* DORR v10 service worker — offline after the first visit */
-const CACHE = 'dorr-v10-2';
+const CACHE = 'dorr-v10-3';
 const CORE = [
   './',
   'index.html',
   'manifest.webmanifest',
-  'css/fonts.css?v=20261031v10',
-  'css/style.css?v=20261031v10',
-  'js/main.js?v=20261031v10',
-  'js/sound.js?v=20261031v10',
+  'css/fonts.css?v=20261031v10b',
+  'css/style.css?v=20261031v10b',
+  'js/main.js?v=20261031v10b',
+  'js/sound.js?v=20261031v10b',
   'icons/icon-192.png',
   'icons/icon-512.png',
   'icons/apple-touch-icon.png',
