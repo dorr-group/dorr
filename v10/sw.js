@@ -1,20 +1,13 @@
 /* DORR v10 service worker — offline after the first visit */
-const CACHE = 'dorr-v10-1';
+const CACHE = 'dorr-v10-2';
 const CORE = [
   './',
   'index.html',
   'manifest.webmanifest',
-  'css/fonts.css?v=20261030v10',
-  'css/style.css?v=20261030v10',
-  'js/main.js?v=20261030v10',
-  'js/sound.js?v=20261030v10',
-  'img/dada.webp',
-  'img/dada-room.webp',
-  'img/sayah.webp',
-  'img/dejavu.webp',
-  'img/m04.webp',
-  'img/randezvou.webp',
-  'img/pearl.webp',
+  'css/fonts.css?v=20261031v10',
+  'css/style.css?v=20261031v10',
+  'js/main.js?v=20261031v10',
+  'js/sound.js?v=20261031v10',
   'icons/icon-192.png',
   'icons/icon-512.png',
   'icons/apple-touch-icon.png',

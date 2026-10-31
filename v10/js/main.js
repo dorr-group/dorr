@@ -5,9 +5,9 @@
       joint. Scroll opens it on its hinge; the pearl inside is DORR (tap it).
    B: five brand pearls built of points and lines travel past like beads, their details
       written on a ring of text around each one (tap one for its page).
-   C: the Services Company: eight bead-pearls strung on one thread of light.
-   D: Future Vision: an orrery, the pearl at its centre, the brands on their orbits and open
-      slots for concepts to come. The cursor tilts it.
+   C: the Services Company: one quiet thread of light carrying a single pearl.
+   D: Future Vision: an orrery, the pearl at its centre, the brands on their orbits.
+      The cursor tilts it.
    Scene changes pass through a nacre-light bloom with a water-ripple refraction. */
 import * as THREE from 'three';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
@@ -17,7 +17,7 @@ import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { mergeGeometries, mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
 import { Reflector } from 'three/addons/objects/Reflector.js';
-import { Sound } from './sound.js?v=20261030v10';
+import { Sound } from './sound.js?v=20261031v10';
 
 const root = document.documentElement;
 const $ = (s, c = document) => c.querySelector(s);
@@ -121,30 +121,17 @@ const BRANDS = brandLis.map((li) => ({
   name: li.querySelector('b').textContent.trim(),
   type: li.dataset.type,
   text: li.querySelector('p').textContent.trim(),
-  img: li.dataset.img || '',
-  alt: li.dataset.alt || '',
-  img2: li.dataset.img2 || '',
-  alt2: li.dataset.alt2 || '',
 }));
 const SH = { kind: null, idx: 0, last: null, hooks: {} };
 const idxBtns = $$('[data-b-index] button');
 idxBtns.forEach((x, k) => x.addEventListener('click', () => setBrand(k)));
-const bEl = { num: $('[data-b-num]'), name: $('[data-b-name]'), type: $('[data-b-type]'), text: $('[data-b-text]'), fig: $('[data-b-fig]'), img: $('[data-b-img]'), prev: $('[data-prev-name]'), next: $('[data-next-name]') };
+const bEl = { num: $('[data-b-num]'), name: $('[data-b-name]'), type: $('[data-b-type]'), text: $('[data-b-text]'), prev: $('[data-prev-name]'), next: $('[data-next-name]') };
 function fillBrand(i, animate) {
   const b = BRANDS[i];
   bEl.num.textContent = pad2(i + 1);
   if (animate) scramble(bEl.name, b.name, 0.7); else bEl.name.textContent = b.name;
   bEl.type.textContent = b.type;
   bEl.text.textContent = b.text;
-  if (b.img) {
-    bEl.fig.hidden = false;
-    if (bEl.img.getAttribute('src') !== b.img) bEl.img.src = b.img;
-    bEl.img.alt = b.alt;
-  } else {
-    bEl.fig.hidden = true;
-    bEl.img.removeAttribute('src');
-    bEl.img.alt = '';
-  }
   bEl.prev.textContent = BRANDS[(i + 4) % 5].name;
   bEl.next.textContent = BRANDS[(i + 1) % 5].name;
   idxBtns.forEach((x, k) => { x.classList.toggle('is-now', k === i); x.setAttribute('aria-current', k === i ? 'true' : 'false'); });
@@ -931,39 +918,32 @@ async function main() {
   innerDorr.group.visible = false;
   scene.add(innerDorr.group);
 
-  /* ============================================================ C · eight bead-pearls on one thread */
+  /* ============================================================ C · the Services Company: one thread of light, one pearl */
   const stageC = new THREE.Group();
   scene.add(stageC);
-  const DEPTS = $$('[data-disciplines] li').map((li) => li.textContent.trim());
-  const BEAD_GAP = 3.1, BEAD_R = 0.78;
+  const BEAD_R = 0.95;
   const strand = (x, out) => out.set(x, 0.05 * x * x - 0.9, -0.035 * x * x);
-  const beadPos = (k, out) => strand((k - 3.5) * BEAD_GAP, out);
-  const necklace = (() => {
+  const thread = (() => {
     const pts = [], set = new Set(), edges = [];
-    const NB = Math.round(150 * DENS), c = new THREE.Vector3();
-    for (let k = 0; k < 8; k++) {
-      beadPos(k, c);
-      const from = pts.length;
-      const bead = fib(NB, BEAD_R);
-      for (const v of bead) { v.add(c); v.seg = k; pts.push(v); }
-      knn(pts, 3, 0.5, from, pts.length, set, edges);
-    }
-    const x0 = -3.5 * BEAD_GAP - 4, x1 = 3.5 * BEAD_GAP + 4, steps = Math.round((x1 - x0) / 0.16);
+    const c = strand(0, new THREE.Vector3());
+    const bead = fib(Math.round(260 * DENS), BEAD_R);
+    for (const v of bead) { v.add(c); v.seg = 0; pts.push(v); }
+    knn(pts, 3, 0.5, 0, pts.length, set, edges);
+    const x0 = -16, x1 = 16, steps = Math.round((x1 - x0) / 0.16);
     let prev = -1;
     for (let i = 0; i <= steps; i++) {
       const x = x0 + (i / steps) * (x1 - x0);
-      const kk = Math.round(x / BEAD_GAP + 3.5);
-      if (kk >= 0 && kk < 8 && Math.abs(x - (kk - 3.5) * BEAD_GAP) < BEAD_R * 0.92) { prev = -1; continue; }
+      if (Math.abs(x) < BEAD_R * 0.92) { prev = -1; continue; }
       const v = strand(x, new THREE.Vector3());
-      v.seg = clamp(kk, 0, 7); v.inner = true;
+      v.seg = 0; v.inner = true;
       pts.push(v);
       if (prev >= 0) edges.push([prev, pts.length - 1]);
       prev = pts.length - 1;
     }
     return buildPlexus(pts, edges, { seg: true, nodes: 0.05 });
   })();
-  const necklaceG = necklace.group;
-  stageC.add(necklaceG);
+  const threadG = thread.group;
+  stageC.add(threadG);
 
   /* ============================================================ D · Future Vision: an orrery around the pearl */
   const stageD = new THREE.Group();
@@ -987,11 +967,6 @@ async function main() {
     m.scale.setScalar(k < 2 ? 0.42 : 0.36);
     orrery.add(m);
     return { m, r: ORB[k < 2 ? 0 : 1], a0: k < 2 ? k * Math.PI + 0.6 : ((k - 2) * Math.PI * 2) / 3 + 1.4, sp: k < 2 ? 0.16 : 0.1 };
-  });
-  const slots = Array.from({ length: 6 }, (_, k) => {
-    const m = new THREE.Mesh(new THREE.TorusGeometry(0.17, 0.007, 6, 48), glowMat);
-    orrery.add(m);
-    return { m, a0: (k * Math.PI * 2) / 6 + 0.3 };
   });
   const qTmp = new THREE.Quaternion();
 
@@ -1119,9 +1094,7 @@ async function main() {
   const ringA = mkRing(), ringB = mkRing(), ringC = mkRing(), ringD = mkRing();
   const pearlTag = mkTag('<span class="tag__box tag__box--ink" data-pearl-cta>Open the pearl ↗</span>');
   const bTag = mkTag('<span class="tag__row"><span class="tag__box" data-tb-num>01 / 05</span><span class="tag__box" data-tb-type>Restaurant</span></span><span class="tag__big" data-tb-name>DADA</span><span class="tag__txt" data-tb-text></span><span class="tag__row"><span class="tag__box tag__box--ink" data-tb-cta>Open ↗</span></span>', 'tag--c');
-  const dTags = DEPTS.map((d, i) => mkTag(`<span class="tag__box">${pad2(i + 1)}</span>`));
   const vTags = BRANDS.map((b) => mkTag(`<span class="tag__box">${b.name}</span>`));
-  const slotTag = mkTag('<span class="tag__tiny">Room for new concepts</span>');
   const tb = { num: $('[data-tb-num]'), type: $('[data-tb-type]'), name: $('[data-tb-name]'), text: $('[data-tb-text]'), cta: $('[data-tb-cta]') };
   const pearlCta = $('[data-pearl-cta]');
   const verb = coarse ? 'Tap' : 'Click';
@@ -1241,13 +1214,12 @@ async function main() {
   const pToY = (p) => st.start + p * (st.end - st.start);
   const PB0 = 0.372, PB1 = 0.652;
   const brandP = (i) => PB0 + ((i + 0.5) / 5) * (PB1 - PB0);
-  const deptP = (k) => 0.69 + (k / 7) * 0.135;
   const STOPS = [{ p: 0, ch: 0 }, { p: 0.14, ch: 1 }, { p: 0.228, ch: 1 }, { p: 0.31, ch: 2 }];
   for (let i = 0; i < 5; i++) STOPS.push({ p: brandP(i), ch: 3, brand: i });
-  for (let k = 0; k < 8; k++) STOPS.push({ p: deptP(k), ch: 4, dept: k });
+  STOPS.push({ p: 0.755, ch: 4 });
   STOPS.push({ p: 0.905, ch: 5 }, { p: 0.985, ch: 5 });
   const LAST = STOPS.length - 1;
-  const CH_FIRST = [0, 1, 3, 4, 9, 17];
+  const CH_FIRST = [0, 1, 3, 4, 9, 10];
   const brandStep = (i) => 4 + i;
   const easeSine = (t) => -(Math.cos(Math.PI * t) - 1) / 2;
   const syncScroll = () => { const y = Math.round(pToY(S.p)); if (S.mode === 'film' && Math.abs(window.scrollY - y) > 1) window.scrollTo(0, y); };
@@ -1464,9 +1436,8 @@ async function main() {
   const IN = { on: false, busy: false, pushed: false, last: null };
   let exitWaiter = null;
   const inEl = $('[data-inside]');
-  const inUI = { num: $('[data-in-num]', inEl), kicker: $('[data-in-kicker]', inEl), name: $('[data-in-name]', inEl), type: $('[data-in-type]', inEl), copy: $('[data-in-copy]', inEl), media: $('[data-in-media]', inEl), prev: $('[data-in-prev]', inEl), next: $('[data-in-next]', inEl), prevName: $('[data-in-prev-name]', inEl), nextName: $('[data-in-next-name]', inEl), back: $('[data-in-back]', inEl) };
+  const inUI = { num: $('[data-in-num]', inEl), kicker: $('[data-in-kicker]', inEl), name: $('[data-in-name]', inEl), type: $('[data-in-type]', inEl), copy: $('[data-in-copy]', inEl), prev: $('[data-in-prev]', inEl), next: $('[data-in-next]', inEl), prevName: $('[data-in-prev-name]', inEl), nextName: $('[data-in-next-name]', inEl), back: $('[data-in-back]', inEl) };
   const KIND = ['Geodesic sphere', 'Rippled sphere', 'A sphere within a sphere', 'Meridians and parallels', 'Two halves that meet'];
-  const fig = (src, alt) => `<figure><img src="${src}" alt="${alt}" loading="eager" decoding="async"></figure>`;
   function fillInside(kind, i) {
     if (kind === 'dorr') {
       inUI.num.textContent = '00';
@@ -1477,7 +1448,6 @@ async function main() {
       inUI.copy.innerHTML = '';
       $$('.sheet__body p', src).forEach((p) => inUI.copy.appendChild(p.cloneNode(true)));
       inUI.copy.appendChild($('.tree', src).cloneNode(true));
-      inUI.media.innerHTML = fig('img/pearl.webp', 'A single pearl resting inside a rough, open oyster shell');
       inUI.prev.hidden = true;
       inUI.next.hidden = false; inUI.nextName.textContent = 'The five brands';
     } else {
@@ -1486,10 +1456,9 @@ async function main() {
       inUI.kicker.textContent = `Inside the pearl · ${pad2(i + 1)} / 05`;
       inUI.name.textContent = b.name;
       inUI.type.textContent = b.type;
-      inUI.copy.innerHTML = `<p></p><dl class="sheet__meta"><div><dt>Part of</dt><dd>DORR Hospitality Group</dd></div><div><dt>Supported by</dt><dd>The Services Company · 8 disciplines</dd></div><div><dt>Governance</dt><dd>The Holding Company</dd></div><div><dt>Drawn as</dt><dd></dd></div></dl>`;
+      inUI.copy.innerHTML = `<p></p><dl class="sheet__meta"><div><dt>Part of</dt><dd>DORR Hospitality Group</dd></div><div><dt>Supported by</dt><dd>The Services Company</dd></div><div><dt>Governance</dt><dd>The Holding Company</dd></div><div><dt>Drawn as</dt><dd></dd></div></dl>`;
       inUI.copy.querySelector('p').textContent = b.text;
       inUI.copy.querySelector('dl > div:last-child dd').textContent = `${KIND[i]} · ${pe.nPts} points · ${pe.nLines} lines`;
-      inUI.media.innerHTML = (b.img2 ? fig(b.img2, b.alt2) : '') + (b.img ? fig(b.img, b.alt) : '');
       inUI.prev.hidden = false; inUI.next.hidden = false;
       inUI.prevName.textContent = BRANDS[(i + 4) % 5].name;
       inUI.nextName.textContent = BRANDS[(i + 1) % 5].name;
@@ -1587,14 +1556,13 @@ async function main() {
   const chNum = $('[data-ch-num]'), chName = $('[data-ch-name]'), hint = $('[data-hint]');
   const ticks = $$('[data-ticks] li');
   const CHAPTERS = [[0, '01', 'The Shell'], [0.085, '02', 'The Holding'], [0.27, '03', 'The Pearl'], [0.365, '04', 'The Portfolio'], [0.66, '05', 'Services Company'], [0.85, '06', 'Future Vision']];
-  const discs = $$('[data-disciplines] li');
 
   /* ============================================================ frame */
   const clock = new THREE.Clock();
   const camPos = new THREE.Vector3(), camLook = new THREE.Vector3(), tmpV = new THREE.Vector3(), tmpW = new THREE.Vector3();
   const sph = new THREE.Spherical();
   const right = new THREE.Vector3(), up = new THREE.Vector3(), fwd = new THREE.Vector3();
-  let stage = 'A', openAmt = 0, lastChapter = -1, lastDisc = -1, lastHint = '';
+  let stage = 'A', openAmt = 0, lastChapter = -1, lastHint = '';
   let raf = 0, running = true;
   const setHint = (s) => { if (s !== lastHint) { lastHint = s; hint.textContent = s; } };
   const trans = (p, c, w) => sstep(w, 0, Math.abs(p - c));
@@ -1648,11 +1616,11 @@ async function main() {
       camPos.set(x - 0.6, 0.6 + Math.sin(time * 0.1) * 0.1, portrait ? 8.8 : W / H < 1.45 ? 8.6 : 7.6);
       camLook.set(x + (portrait ? 0 : 1.15), portrait ? -0.95 : W / H < 1.45 ? -0.45 : 0.05, 0);
     } else if (stage === 'C') {
-      const q = seg(p, 0.69, 0.825) * 7;
+      const q = seg(p, 0.66, 0.85);
       const portrait = W / H < 0.8;
-      strand((q - 3.5) * BEAD_GAP, tmpW);
-      camPos.set(tmpW.x + 0.3, tmpW.y + 1.1, tmpW.z + (portrait ? 9.5 : 7.4));
-      camLook.set(tmpW.x - (portrait ? 0 : 0.95), tmpW.y - (portrait ? 1.0 : 0.1), tmpW.z);
+      strand(0, tmpW);
+      camPos.set(tmpW.x + 0.9 - q * 1.2, tmpW.y + 1.1, tmpW.z + (portrait ? 10.5 : 8.2));
+      camLook.set(tmpW.x - (portrait ? 0 : 1.6), tmpW.y - (portrait ? 1.2 : 0.1), tmpW.z);
     } else {
       const q = seg(p, 0.85, 1);
       const portrait = W / H < 0.8;
@@ -1782,31 +1750,23 @@ async function main() {
       } else { placeRing(ringB, 0, 0, 0, 0, 0, ''); place(bTag, 0, 0, 0); }
     } else { placeRing(ringB, 0, 0, 0, 0, 0, ''); place(bTag, 0, 0, 0); if (shownBrand !== -1) { shownBrand = -1; brandLis.forEach((li) => li.classList.remove('is-now')); } }
 
-    // ---------------------------------------------------- C · the necklace
-    let activeDept = -1;
+    // ---------------------------------------------------- C · one thread, one pearl
     if (stage === 'C') {
-      const q = seg(p, 0.69, 0.825) * 7;
-      activeDept = clamp(Math.round(q), 0, 7);
-      const U = necklace.U;
+      const U = thread.U;
       U.uTime.value = time;
-      U.uActive.value = q;
-      U.uReveal.value += (1.15 - U.uReveal.value) * Math.min(1, dt * 2);
-      U.uScan.value = -2.2 + 4.4 * ((time * 0.15) % 1);
-      necklaceG.rotation.z = Math.sin(time * 0.3) * 0.01;
-      necklaceG.updateMatrixWorld();
+      U.uActive.value = 0;
+      U.uReveal.value += (1.15 - U.uReveal.value) * Math.min(1, dt * 1.6);
+      U.uScan.value = -2.2 + 4.4 * ((time * 0.12) % 1);
+      threadG.rotation.z = Math.sin(time * 0.3) * 0.01;
+      threadG.updateMatrixWorld();
       const tOn = sstep(0.668, 0.686, p) * (1 - sstep(0.835, 0.85, p));
       right.setFromMatrixColumn(camera.matrixWorld, 0);
-      let rad = 40, cx = 0, cy = 0;
-      for (let k = 0; k < 8; k++) {
-        beadPos(k, tmpW).applyMatrix4(necklaceG.matrixWorld);
-        toScreen(tmpW); const bx = scr.x, by = scr.y;
-        tmpW.addScaledVector(right, BEAD_R); toScreen(tmpW);
-        const pr = Math.hypot(scr.x - bx, scr.y - by);
-        if (k === activeDept) { cx = bx; cy = by; rad = pr * 1.3 + 16; }
-        place(dTags[k], bx - 12, by - pr - 30, tOn * (k === activeDept ? 0 : 0.75) * (W >= 760 && bx < 480 ? 0 : 1));
-      }
-      placeRing(ringC, cx, cy, rad, time * 6, tOn, repeatTxt(`${pad2(activeDept + 1)} · ${DEPTS[activeDept]} · Services Company · `, rad));
-    } else { hide(dTags); placeRing(ringC, 0, 0, 0, 0, 0, ''); necklace.U.uReveal.value = 0; }
+      strand(0, tmpW).applyMatrix4(threadG.matrixWorld);
+      toScreen(tmpW); const cx = scr.x, cy = scr.y;
+      tmpW.addScaledVector(right, BEAD_R); toScreen(tmpW);
+      const rad = Math.hypot(scr.x - cx, scr.y - cy) * 1.3 + 16;
+      placeRing(ringC, cx, cy, rad, time * 5, tOn, repeatTxt('Services Company · Shared expertise for every brand in the Group · ', rad));
+    } else { placeRing(ringC, 0, 0, 0, 0, 0, ''); thread.U.uReveal.value = 0; }
 
     // ---------------------------------------------------- D · the orrery
     if (stage === 'D') {
@@ -1820,11 +1780,6 @@ async function main() {
         const o = orbs[k], a = o.a0 + time * o.sp + q * 1.6;
         o.m.position.set(Math.cos(a) * o.r, 0, Math.sin(a) * o.r);
       }
-      for (let k = 0; k < slots.length; k++) {
-        const a = slots[k].a0 + time * 0.05 + q * 0.8;
-        slots[k].m.position.set(Math.cos(a) * ORB[2], 0, Math.sin(a) * ORB[2]);
-        slots[k].m.quaternion.copy(qTmp);
-      }
       orrery.updateMatrixWorld();
       const vOn = sstep(0.87, 0.9, p);
       for (let k = 0; k < orbs.length; k++) {
@@ -1832,14 +1787,12 @@ async function main() {
         const vw = vTags[k].w || 70;
         place(vTags[k], Math.min(scr.x + 14, W - vw - 46), scr.y - 9, vOn * (tmpW.z > -0.5 ? 1 : 0.45));
       }
-      slots[0].m.getWorldPosition(tmpW); toScreen(tmpW);
-      place(slotTag, scr.x + 14, scr.y - 6, vOn * 0.9);
       bigPearl.getWorldPosition(tagPearl); toScreen(tagPearl); const cx = scr.x, cy = scr.y;
       right.setFromMatrixColumn(camera.matrixWorld, 0);
       tmpW.copy(tagPearl).addScaledVector(right, PR * 1.7); toScreen(tmpW);
       const rad = Math.hypot(scr.x - cx, scr.y - cy) * 1.3 + 16;
       placeRing(ringD, cx, cy, rad, -time * 4, vOn, repeatTxt(visRingTxt, rad));
-    } else { hide(vTags); place(slotTag, 0, 0, 0); placeRing(ringD, 0, 0, 0, 0, 0, ''); }
+    } else { hide(vTags); placeRing(ringD, 0, 0, 0, 0, 0, ''); }
 
     // hover (mouse only)
     if (ptr.moved && !SH.kind) {
@@ -1887,10 +1840,6 @@ async function main() {
       scramble(chName, CHAPTERS[ci][2], 0.5);
       for (let i = 0; i < ticks.length; i++) { ticks[i].classList.toggle('is-on', i < ci); ticks[i].classList.toggle('is-now', i === ci); }
     }
-    if (activeDept !== lastDisc && activeDept >= 0) {
-      lastDisc = activeDept;
-      for (let i = 0; i < discs.length; i++) { discs[i].classList.toggle('is-on', i < activeDept); discs[i].classList.toggle('is-now', i === activeDept); }
-    }
     setHint(IN.on ? (coarse ? 'Swipe down · back' : 'Esc · back') : stage === 'A' && openAmt > 0.5 ? `${verb} the pearl` : stage === 'B' ? `${verb} a pearl` : stage === 'D' && !coarse ? 'Move to tilt' : coarse ? 'Swipe' : 'Scroll');
 
     // ---------------------------------------------------- post
@@ -1910,7 +1859,7 @@ async function main() {
   });
 
   window.__dorr = {
-    S, F, pearls, necklace, camera, renderer, bloom, finalPass, scene, LOOK, blockU, glowMat,
+    S, F, pearls, thread, camera, renderer, bloom, finalPass, scene, LOOK, blockU, glowMat,
     setP: (v) => { S.p = v; let k = 0, b = 1e9; STOPS.forEach((st0, i) => { const d0 = Math.abs(st0.p - v); if (d0 < b) { b = d0; k = i; } }); S.step = k; },
     STOPS, IN, goStep, stepBy, jumpTo, enterPearl, exitPearl, insideStep, toDossier, toFilm, mode: () => S.mode,
     trace: [], tracing: false,
