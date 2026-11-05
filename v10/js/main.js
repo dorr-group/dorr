@@ -17,7 +17,7 @@ import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { mergeGeometries, mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
 import { Reflector } from 'three/addons/objects/Reflector.js';
-import { Sound } from './sound.js?v=20261031v10b';
+import { Sound } from './sound.js?v=20261105v10b';
 
 const root = document.documentElement;
 const $ = (s, c = document) => c.querySelector(s);
@@ -152,7 +152,7 @@ function openSheet(kind, i = 0) {
   const panel = $('.sheet__panel', el);
   panel.scrollTop = 0;
   if (anim()) {
-    const phone = innerWidth < 760;
+    const phone = innerWidth < 760 || innerWidth / innerHeight < 0.8;
     gsap.killTweensOf(panel);
     gsap.fromTo(panel, phone ? { yPercent: 18, autoAlpha: 0 } : { xPercent: 14, autoAlpha: 0 }, { xPercent: 0, yPercent: 0, autoAlpha: 1, duration: 0.9, ease: 'power3.out', delay: 0.25 });
     gsap.fromTo(panel.children, { y: 14, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.7, stagger: 0.05, ease: 'power2.out', delay: 0.4 });
@@ -174,7 +174,7 @@ function closeSheet(instant) {
   if (instant === true || !anim()) el.hidden = true;
   else {
     gsap.killTweensOf(panel);
-    gsap.to(panel, { autoAlpha: 0, x: innerWidth < 760 ? 0 : 40, y: innerWidth < 760 ? 40 : 0, duration: 0.5, ease: 'power2.in', onComplete: () => { el.hidden = true; gsap.set(panel, { x: 0, y: 0 }); } });
+    gsap.to(panel, { autoAlpha: 0, x: innerWidth < 760 || innerWidth / innerHeight < 0.8 ? 0 : 40, y: innerWidth < 760 || innerWidth / innerHeight < 0.8 ? 40 : 0, duration: 0.5, ease: 'power2.in', onComplete: () => { el.hidden = true; gsap.set(panel, { x: 0, y: 0 }); } });
   }
   if (instant !== true) Sound.close();
   Sound.duck(false);
@@ -240,8 +240,10 @@ async function main() {
     renderer = new THREE.WebGLRenderer({ canvas, antialias: !isPhone, powerPreference: 'high-performance', stencil: false });
   } catch (e) { goStatic(); return; }
   if (!renderer.getContext()) { goStatic(); return; }
-  const DPR = Math.min(window.devicePixelRatio || 1, isPhone ? 1.5 : 1.75);
+  const dprNow = () => Math.min(window.devicePixelRatio || 1, isPhone ? 1.5 : 1.75);
+  let DPR = dprNow();
   renderer.setPixelRatio(DPR);
+  const pixelSized = []; // [uniform, base] pairs that scale with the pixel ratio
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 0.82;
@@ -625,8 +627,8 @@ async function main() {
   // ---- the sea: still, mirror-like water the shell rests in, rings of light spreading from it
   const waterU = { uTime: { value: 0 }, uFogD: FOGD, uFog: { value: scene.fog.color }, uGlow: { value: 0 }, uDeep: { value: new THREE.Color('#4f483f') } };
   const water = new Reflector(new THREE.PlaneGeometry(420, 420), {
-    textureWidth: Math.round(innerWidth * DPR * (isPhone ? 0.35 : 0.5)),
-    textureHeight: Math.round(innerHeight * DPR * (isPhone ? 0.35 : 0.5)),
+    textureWidth: Math.round(Math.max(1, canvas.clientWidth || innerWidth) * DPR * (isPhone ? 0.35 : 0.5)),
+    textureHeight: Math.round(Math.max(1, canvas.clientHeight || innerHeight) * DPR * (isPhone ? 0.35 : 0.5)),
     clipBias: 0.003, multisample: 0, color: 0xffffff,
     shader: {
       name: 'DorrWater',
@@ -733,9 +735,10 @@ async function main() {
       if (a < 0.004) discard;
       gl_FragColor = vec4(uColor, min(a, 1.0));
     }`;
+  const pxu = (base) => { const u = { value: base * DPR }; pixelSized.push([u, base]); return u; };
   const plexusUniforms = (color) => ({
-    uTime: { value: 0 }, uReveal: { value: 0 }, uScan: { value: -2 }, uAlpha: { value: 1 }, uSize: { value: 30 * DPR },
-    uSplit: { value: 0 }, uWave: { value: 0 }, uEcho: { value: 0 }, uHover: { value: 0 }, uFogD: FOGD, uActive: { value: 0 }, uPix: { value: DPR }, uInside: { value: 0 },
+    uTime: { value: 0 }, uReveal: { value: 0 }, uScan: { value: -2 }, uAlpha: { value: 1 }, uSize: pxu(30),
+    uSplit: { value: 0 }, uWave: { value: 0 }, uEcho: { value: 0 }, uHover: { value: 0 }, uFogD: FOGD, uActive: { value: 0 }, uPix: pxu(1), uInside: { value: 0 },
     uColor: { value: new THREE.Color(color || '#fffaf2').multiplyScalar(1.25) },
   });
   // build Points + LineSegments from points and edges
@@ -981,7 +984,7 @@ async function main() {
   for (let i = 0; i < DN * 3; i++) dustSeed[i] = rnd();
   const dustGeo = new THREE.BufferGeometry();
   dustGeo.setAttribute('position', new THREE.BufferAttribute(dustSeed, 3));
-  const dustU = { uCam: { value: new THREE.Vector3() }, uTime: { value: 0 }, uSize: { value: 26 * DPR }, uA: { value: 0.8 } };
+  const dustU = { uCam: { value: new THREE.Vector3() }, uTime: { value: 0 }, uSize: pxu(26), uA: { value: 0.8 } };
   const dust = new THREE.Points(dustGeo, new THREE.ShaderMaterial({
     transparent: true, depthWrite: false, uniforms: dustU,
     vertexShader: `uniform vec3 uCam; uniform float uTime, uSize, uA; varying float vA;
@@ -1038,18 +1041,42 @@ async function main() {
   });
   composer.addPass(finalPass);
 
-  let W = 1, H = 1, baseFov = 36;
-  const resize = () => {
-    W = window.innerWidth; H = window.innerHeight;
+  let W = 0, H = 0, baseFov = 36;
+  // One sizing pipeline. The canvas is laid out by CSS (fixed, full viewport); its drawing buffer,
+  // the camera, the composer and its targets, the water reflection, the pixel-sized uniforms and
+  // the cached size used by every HUD label are all updated together from the canvas's real CSS
+  // size and the current pixel ratio. Events schedule it; every frame also checks it, so a frame
+  // is never drawn with stale sizes, whatever event a browser forgets to send.
+  const sizeListeners = [];
+  const applySize = (force) => {
+    const w = Math.max(1, canvas.clientWidth || window.innerWidth), h = Math.max(1, canvas.clientHeight || window.innerHeight), d = dprNow();
+    if (!force && w === W && h === H && d === DPR) return false;
+    if (d !== DPR) {
+      DPR = d;
+      renderer.setPixelRatio(d); composer.setPixelRatio(d);
+      for (const [u, base] of pixelSized) u.value = base * d;
+    }
+    W = w; H = h;
     renderer.setSize(W, H, false);
     composer.setSize(W, H);
     camera.aspect = W / H;
     camera.fov = baseFov = W / H < 0.8 ? 50 : 36;
     camera.updateProjectionMatrix();
     finalPass.uniforms.uRes.value.set(W * DPR, H * DPR);
+    for (const fn of sizeListeners) fn();
+    return true;
   };
-  window.addEventListener('resize', resize);
-  resize();
+  const onResize = () => applySize();
+  window.addEventListener('resize', onResize);
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', onResize);
+  if (window.ResizeObserver) new ResizeObserver(onResize).observe(canvas);
+  const watchDpr = () => {
+    const mq = window.matchMedia(`(resolution: ${window.devicePixelRatio || 1}dppx)`);
+    const h = () => { mq.removeEventListener('change', h); applySize(); watchDpr(); };
+    mq.addEventListener('change', h);
+  };
+  watchDpr();
+  applySize(true);
 
   /* ============================================================ the HUD tags pinned to 3D */
   const tagsEl = $('[data-tags]');
@@ -1093,6 +1120,7 @@ async function main() {
       R.c.setAttribute('r', Math.max(1, rad - 10).toFixed(1));
       R.tp.setAttribute('textLength', (2 * Math.PI * rad * 0.985).toFixed(1));
     }
+    R.cx = cx; R.cy = cy;
     R.g.setAttribute('transform', `translate(${cx.toFixed(1)} ${cy.toFixed(1)}) rotate(${(rot % 360).toFixed(2)})`);
   };
   const repeatTxt = (t, rad) => { const n = Math.max(1, Math.round((2 * Math.PI * rad) / (t.length * 9))); return t.repeat(n); };
@@ -1311,7 +1339,9 @@ async function main() {
   }
   const atDossierTop = () => window.scrollY <= dossierTop() + 4;
   // free scrolling in the dossier past its top (scrollbar, keyboard) hands back to the film
-  if (lenis) lenis.on('scroll', () => { if (S.mode === 'dossier' && !S.busy && window.scrollY < dossierTop() - 8) { S.busy = true; S.step = LAST; S.p = STOPS[LAST].p; S.mode = 'film'; lenis.stop(); syncScroll(); S.busy = false; writeHistory(LAST, false); } });
+  if (lenis) lenis.on('scroll', () => {
+    if (S.mode === 'dossier' && !S.resizing) S.dOff = window.scrollY - dossierTop();
+    if (S.mode === 'dossier' && !S.busy && !S.resizing && window.scrollY < dossierTop() - 8) { S.busy = true; S.step = LAST; S.p = STOPS[LAST].p; S.mode = 'film'; lenis.stop(); syncScroll(); S.busy = false; writeHistory(LAST, false); } });
 
   // ---- wheel: one gesture = one step (trackpad inertia stays within its gesture)
   const G = { last: 0, start: 0, lastAbs: 0, used: true };
@@ -1426,14 +1456,21 @@ async function main() {
     else if (/^#s\d+$/.test(location.hash)) jumpTo(+location.hash.slice(2), { push: false });
   });
 
-  window.addEventListener('resize', () => {
-    ScrollTrigger.refresh();
-    if (S.mode === 'film') syncScroll();
-    else if (lenis && !S.busy && Math.abs(window.scrollY - dossierTop()) < H) { /* stay where the reader is */ }
-    measure(bTag); measure(pearlTag);
+  let refreshT = 0;
+  let resizingT = 0;
+  sizeListeners.push(() => {
+    // the film track is measured in viewport heights: keep the reader's place in the dossier
+    S.resizing = true; clearTimeout(resizingT);
+    const keep = () => { if (S.mode === 'dossier') { const y = dossierTop() + Math.max(0, S.dOff || 0); if (lenis) lenis.scrollTo(y, { immediate: true, force: true }); else window.scrollTo(0, y); } };
+    keep();
+    resizingT = setTimeout(() => { ScrollTrigger.refresh(); keep(); S.resizing = false; }, 220);
     const rt = water.getRenderTarget && water.getRenderTarget();
-    if (rt) rt.setSize(Math.round(innerWidth * DPR * (isPhone ? 0.35 : 0.5)), Math.round(innerHeight * DPR * (isPhone ? 0.35 : 0.5)));
+    if (rt) rt.setSize(Math.round(W * DPR * (isPhone ? 0.35 : 0.5)), Math.round(H * DPR * (isPhone ? 0.35 : 0.5)));
+    measure(bTag); measure(pearlTag); vTags.forEach(measure); measure(slotTag);
+    clearTimeout(refreshT);
+    refreshT = setTimeout(() => { ScrollTrigger.refresh(); if (S.mode === 'film' && !S.busy) syncScroll(); measure(bTag); measure(pearlTag); vTags.forEach(measure); }, 160);
   });
+  sizeListeners[sizeListeners.length - 1]();
 
   /* ============================================================ inside a pearl */
   // the camera flies into the sphere of points; they part around it and close into a lit space,
@@ -1572,12 +1609,35 @@ async function main() {
   let raf = 0, running = true;
   const setHint = (s) => { if (s !== lastHint) { lastHint = s; hint.textContent = s; } };
   const trans = (p, c, w) => sstep(w, 0, Math.abs(p - c));
+  // framing: scenes are composed at 16:10; narrower landscape windows pull back so the subject keeps
+  // its width, very tall phones pull back a little, very short landscape windows keep the height rule
+  const fitWide = () => clamp(1.6 / (W / H), 1, 2);
+  const fitTall = () => clamp(0.462 / (W / H), 1, 1.3);
   const tagPearl = new THREE.Vector3();
   const hide = (arr) => { for (let i = 0; i < arr.length; i++) place(arr[i], 0, 0, 0); };
+  const avoidRects = [];
+  let avoidAge = 99;
+  const railEl = $('.rail'), hudTopEl = $('.hud--top'), hudBotEl = $('.hud--bottom');
+  const refreshAvoid = () => {
+    avoidRects.length = 0; avoidAge = 0;
+    for (const el of [railEl, hudTopEl, hudBotEl]) { const r = el.getBoundingClientRect(); if (r.width) avoidRects.push([r.left - 6, r.top - 6, r.right + 6, r.bottom + 6]); }
+    for (const pn of panels) if (pn.on) { const r = pn.el.getBoundingClientRect(); avoidRects.push([r.left - 8, r.top - 8, r.right + 8, r.bottom + 8]); }
+  };
+  // a scene-anchored label: clamped into the viewport, and faded where it would cover the HUD or a panel
+  const placeClear = (t, x, y, o) => {
+    const w = t.w || 80, h = t.h || 18;
+    x = clamp(x, 8, W - w - 8); y = clamp(y, 8, H - h - 8);
+    let hit = false;
+    for (let i = 0; i < avoidRects.length; i++) { const r = avoidRects[i]; if (x < r[2] && x + w > r[0] && y < r[3] && y + h > r[1]) { hit = true; break; } }
+    const f0 = t.fade === undefined ? 1 : t.fade;
+    t.fade = hit ? Math.max(0, f0 - 0.5) : Math.min(1, f0 + 0.15);
+    place(t, x, y, o * (t.fade < 0.02 ? 0 : t.fade));
+  };
 
   const frame = () => {
     raf = requestAnimationFrame(frame);
     if (!running) return;
+    if (applySize() || ++avoidAge > 20) refreshAvoid();
     const dt = Math.min(clock.getDelta(), 0.05);
     const time = clock.elapsedTime;
     const prevP = S.prevP === undefined ? S.p : S.prevP;
@@ -1585,7 +1645,7 @@ async function main() {
     S.vel += (Math.min(0.03, (Math.abs(S.p - prevP) / Math.max(dt, 1e-3)) * 0.02) - S.vel) * 0.1;
     const p = S.p;
     const dTop = S.dossierVisible ? dossierEl.getBoundingClientRect().top : 1e9;
-    const inDossier = dTop < 70;
+    const inDossier = (S.mode === 'dossier' && !S.busy) || dTop < 70;
     if (inDossier !== S.inDossier) { S.inDossier = inDossier; root.classList.toggle('in-dossier', inDossier); }
     if (dTop <= 0) return; // the dossier covers the scene
     wireN = 0; dotN = 0;
@@ -1612,27 +1672,28 @@ async function main() {
     // ---------------------------------------------------- camera from scroll
     if (stage === 'A') {
       samplePath(W / H < 1 ? PATH_AP : PATH_A, p, camPos, camLook);
-      if (W / H < 0.8) { tmpV.subVectors(camPos, camLook).multiplyScalar(p < 0.3 ? 1.5 : 1.25); camPos.copy(camLook).add(tmpV); }
+      if (W / H < 0.8) { tmpV.subVectors(camPos, camLook).multiplyScalar((p < 0.3 ? 1.5 : 1.25) * fitTall()); camPos.copy(camLook).add(tmpV); }
+      else { tmpV.subVectors(camPos, camLook).multiplyScalar(fitWide()); camPos.copy(camLook).add(tmpV); }
     } else if (stage === 'B') {
       const q = clamp((p - PB0) / (PB1 - PB0)) * 5;
       const i = Math.min(4, Math.floor(q)), f = q - i;
       const g = 0.5 + 0.5 * Math.sign(f - 0.5) * Math.pow(Math.abs(2 * f - 1), 2.3);
       const x = SP * (i - 0.5 + g);
       const portrait = W / H < 0.8;
-      camPos.set(x - 0.6, 0.6 + Math.sin(time * 0.1) * 0.1, portrait ? 8.8 : W / H < 1.45 ? 8.6 : 7.6);
-      camLook.set(x + (portrait ? 0 : 1.15), portrait ? -0.95 : W / H < 1.45 ? -0.45 : 0.05, 0);
+      camPos.set(x - 0.6, 0.6 + Math.sin(time * 0.1) * 0.1, portrait ? 8.8 * fitTall() : 7.6 * fitWide());
+      camLook.set(x + (portrait ? 0 : 1.15 * Math.min(1, (W / H) / 1.6)), portrait ? -0.95 : W / H < 1.45 ? -0.45 : 0.05, 0);
     } else if (stage === 'C') {
       const q = seg(p, 0.66, 0.85);
       const portrait = W / H < 0.8;
       strand(0, tmpW);
-      camPos.set(tmpW.x + 0.9 - q * 1.2, tmpW.y + 1.1, tmpW.z + (portrait ? 10.5 : 8.2));
+      camPos.set(tmpW.x + 0.9 - q * 1.2, tmpW.y + 1.1, tmpW.z + (portrait ? 10.5 * fitTall() : 8.2 * fitWide()));
       camLook.set(tmpW.x - (portrait ? 0 : 1.6), tmpW.y - (portrait ? 1.2 : 0.1), tmpW.z);
     } else {
       const q = seg(p, 0.85, 1);
       const portrait = W / H < 0.8;
-      const a = 0.35 - q * 0.6, r = (portrait ? 15 : 11) - q * 1.5;
+      const a = 0.35 - q * 0.6, r = ((portrait ? 15 : 11) - q * 1.5) * (portrait ? fitTall() : fitWide());
       camPos.set(Math.sin(a) * r, 2.6 - q * 0.5, Math.cos(a) * r);
-      camLook.set(portrait ? 0 : -2.6, portrait ? -1.6 : -0.9, 0);
+      camLook.set(portrait ? 0 : -2.6 * Math.max(1, (W / H) / 1.6) * (H < 520 ? 1.15 : 1), portrait ? -1.6 : -0.9, 0);
     }
     // the opened pearl takes the camera
     if (F.kind && F.v > 0) {
@@ -1751,7 +1812,13 @@ async function main() {
         const rad = Math.hypot(scr.x - cx, scr.y - cy) * 1.18 + 16;
         placeRing(ringB, cx, cy, rad, -time * 5, tOn, repeatTxt(brandRingTxt, rad));
         let x, y;
-        if (W < 760) { x = 16; y = cy + rad + 16; } else { x = cx + rad + 44; y = cy - bTag.h * 0.5; if (x + bTag.w > W - 70) x = cx - rad - 44 - bTag.w; }
+        if (W < 760 || W / H < 0.8) { x = 16; y = cy + rad + 16; }
+        else {
+          x = cx + rad + 44; y = cy - bTag.h * 0.5;
+          if (x + bTag.w > W - 70) x = cx - rad - 44 - bTag.w;
+          if (x < 270) { x = clamp(cx - bTag.w / 2, 16, W - bTag.w - 70); y = Math.min(cy + rad + 14, H - bTag.h - 60); }
+          y = clamp(y, 76, H - bTag.h - 50);
+        }
         place(bTag, x, y, tOn);
       } else { placeRing(ringB, 0, 0, 0, 0, 0, ''); place(bTag, 0, 0, 0); }
     } else { placeRing(ringB, 0, 0, 0, 0, 0, ''); place(bTag, 0, 0, 0); if (shownBrand !== -1) { shownBrand = -1; brandLis.forEach((li) => li.classList.remove('is-now')); } }
@@ -1795,11 +1862,10 @@ async function main() {
       const vOn = sstep(0.87, 0.9, p);
       for (let k = 0; k < orbs.length; k++) {
         orbs[k].m.getWorldPosition(tmpW); toScreen(tmpW);
-        const vw = vTags[k].w || 70;
-        place(vTags[k], Math.min(scr.x + 14, W - vw - 46), scr.y - 9, vOn * (tmpW.z > -0.5 ? 1 : 0.45));
+        placeClear(vTags[k], scr.x + 14, scr.y - 9, vOn * (tmpW.z > -0.5 ? 1 : 0.45));
       }
       slots[0].m.getWorldPosition(tmpW); toScreen(tmpW);
-      place(slotTag, scr.x + 14, scr.y - 6, vOn * 0.9);
+      placeClear(slotTag, scr.x + 14, scr.y - 6, vOn * 0.9);
       bigPearl.getWorldPosition(tagPearl); toScreen(tagPearl); const cx = scr.x, cy = scr.y;
       right.setFromMatrixColumn(camera.matrixWorld, 0);
       tmpW.copy(tagPearl).addScaledVector(right, PR * 1.7); toScreen(tmpW);
@@ -1876,6 +1942,28 @@ async function main() {
     setP: (v) => { S.p = v; let k = 0, b = 1e9; STOPS.forEach((st0, i) => { const d0 = Math.abs(st0.p - v); if (d0 < b) { b = d0; k = i; } }); S.step = k; },
     STOPS, IN, goStep, stepBy, jumpTo, enterPearl, exitPearl, insideStep, toDossier, toFilm, mode: () => S.mode,
     trace: [], tracing: false,
+    measure: () => {
+      const cw = canvas.clientWidth, ch = canvas.clientHeight;
+      let P = null, r = 1, ringR = null;
+      const st0 = S.mode === 'dossier' ? 'dossier' : stage;
+      if (IN.on) { P = null; }
+      else if (stage === 'A') { P = pearl.getWorldPosition(new THREE.Vector3()); r = PR; ringR = ringA; }
+      else if (stage === 'B') { let k = 0, b = 1e9; pearls.forEach((pe, i) => { const d0 = Math.abs(pe.g.position.x - camera.position.x); if (d0 < b) { b = d0; k = i; } }); P = pearls[k].g.position.clone(); r = 1.03 * pearls[k].g.scale.x; ringR = ringB; }
+      else if (stage === 'C') { P = strand(0, new THREE.Vector3()).applyMatrix4(threadG.matrixWorld); r = BEAD_R; ringR = ringC; }
+      else { P = bigPearl.getWorldPosition(new THREE.Vector3()); r = PR * 1.7; ringR = ringD; }
+      const out = { stage: st0, cssW: cw, cssH: ch, bufW: renderer.domElement.width, bufH: renderer.domElement.height, dpr: DPR, camAspect: +camera.aspect.toFixed(4), cssAspect: +(cw / ch).toFixed(4), bufAspect: +(renderer.domElement.width / renderer.domElement.height).toFixed(4), cached: [W, H] };
+      if (P) {
+        camera.updateMatrixWorld();
+        let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
+        const v = new THREE.Vector3();
+        for (let i = 0; i < 400; i++) { const yy = 1 - (2 * (i + 0.5)) / 400, rr = Math.sqrt(1 - yy * yy), th = i * 2.399963; v.set(P.x + Math.cos(th) * rr * r, P.y + yy * r, P.z + Math.sin(th) * rr * r).project(camera); const sx = (v.x * 0.5 + 0.5) * cw, sy = (-v.y * 0.5 + 0.5) * ch; x0 = Math.min(x0, sx); x1 = Math.max(x1, sx); y0 = Math.min(y0, sy); y1 = Math.max(y1, sy); }
+        const c = P.clone().project(camera);
+        const pcx = (c.x * 0.5 + 0.5) * cw, pcy = (-c.y * 0.5 + 0.5) * ch;
+        Object.assign(out, { pearlW: +(x1 - x0).toFixed(1), pearlH: +(y1 - y0).toFixed(1), ratio: +((x1 - x0) / (y1 - y0)).toFixed(3), inView: x0 >= -2 && y0 >= -2 && x1 <= cw + 2 && y1 <= ch + 2, centre: [+pcx.toFixed(1), +pcy.toFixed(1)] });
+        if (ringR && ringR.o > 0) Object.assign(out, { ringDx: +(ringR.cx - pcx).toFixed(2), ringDy: +(ringR.cy - pcy).toFixed(2) });
+      }
+      return out;
+    },
     open: openSheet, close: closeSheet,
   };
 
@@ -1886,7 +1974,7 @@ async function main() {
   await step('Opening the room');
   try { await Promise.race([document.fonts.ready, new Promise((r) => setTimeout(r, 2500))]); } catch (e) { /* fonts are optional */ }
   measure(pearlTag);
-  vTags.forEach(measure);
+  vTags.forEach(measure); measure(slotTag);
   // compile every stage once so later chapters do not hitch
   stageA.visible = stageB.visible = stageC.visible = stageD.visible = true;
   samplePath(PATH_A, 0, camPos, camLook);
