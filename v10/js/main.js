@@ -17,7 +17,7 @@ import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { mergeGeometries, mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
 import { Reflector } from 'three/addons/objects/Reflector.js';
-import { Sound } from './sound.js?v=20261105v10c';
+import { Sound } from './sound.js?v=20261105v10d';
 
 const root = document.documentElement;
 const $ = (s, c = document) => c.querySelector(s);
@@ -236,7 +236,14 @@ async function main() {
     renderer = new THREE.WebGLRenderer({ canvas, antialias: !isPhone, powerPreference: 'high-performance', stencil: false });
   } catch (e) { goStatic(); return; }
   if (!renderer.getContext()) { goStatic(); return; }
-  const dprNow = () => Math.min(window.devicePixelRatio || 1, isPhone ? 1.5 : 1.75);
+  // pixel ratio = device cap, scaled down by the adaptive quality (Q) when frames run long and
+  // capped while flying into / inside a pearl, where thousands of points fill the screen
+  const Q = { scale: 1, flight: false, ema: 16, last: 0, calm: 0 };
+  const dprNow = () => {
+    const base = Math.min(window.devicePixelRatio || 1, 1.5);
+    const d = base * Q.scale;
+    return Math.max(0.6, Math.round(d * 20) / 20);
+  };
   let DPR = dprNow();
   renderer.setPixelRatio(DPR);
   renderer.debug.checkShaderErrors = false; // no synchronous info-log round-trips when a program links
@@ -1500,7 +1507,8 @@ async function main() {
     }
   }
   function showInside() {
-    mainEl.setAttribute('aria-hidden', 'true'); // modal for assistive tech; the focus trap keeps keyboard focus inside (inert on <main> re-styles the whole page)
+    // the dialog is aria-modal and the focus trap keeps keyboard focus inside; <main> is left
+    // untouched so the accessibility tree and styles of the whole page are not rebuilt
     inEl.classList.remove('is-out');
     inEl.classList.add('is-in');
     inUI.back.focus({ preventScroll: true });
@@ -1537,7 +1545,6 @@ async function main() {
       onComplete: () => {
         F.kind = null; IN.on = false; IN.busy = false;
         inEl.hidden = true; inEl.classList.remove('is-out');
-        mainEl.removeAttribute('aria-hidden');
         if (IN.last && IN.last.focus && document.contains(IN.last)) IN.last.focus({ preventScroll: true });
         if (exitWaiter) { const fn = exitWaiter; exitWaiter = null; fn(); }
       },
@@ -1547,7 +1554,6 @@ async function main() {
     gsap.killTweensOf(F);
     F.v = 0; F.open = 0; F.kind = null; IN.on = false; IN.busy = false; IN.pushed = false;
     inEl.hidden = true; inEl.classList.remove('is-in', 'is-out');
-    mainEl.removeAttribute('aria-hidden');
     Sound.duck(false);
   }
   // pearl to pearl without leaving the portfolio: out a little, travel, in again
@@ -1663,6 +1669,21 @@ async function main() {
     if (!IN.on && ++avoidAge > 30) refreshAvoid();
     const dt = Math.min(clock.getDelta(), 0.05);
     const time = clock.elapsedTime;
+    {
+      // adaptive quality: lower the pixel ratio in steps while frames run long, raise it slowly
+      // when there is headroom (hysteresis, so the drawing buffer is never resized every frame)
+      const now = performance.now(), ft = Q.last ? Math.min(now - Q.last, 250) : 16;
+      Q.last = now;
+      Q.ema += (ft - Q.ema) * 0.12;
+      const flying = !!F.kind && F.v > 0.01;
+      let changed = false;
+      Q.flight = flying; // no resize at the start or end of a flight: that reallocation is itself a hitch
+      if (Q.ema > 24 && Q.scale > 0.5) { Q.scale = Math.max(0.5, Q.scale - 0.15); Q.ema = 16; Q.calm = 0; changed = true; }
+      else if (Q.ema < 13 && Q.scale < 1) { if (++Q.calm > 120) { Q.scale = Math.min(1, Q.scale + 0.1); Q.calm = 0; changed = true; } }
+      else Q.calm = 0;
+      if (changed) applySize();
+      if (bloom) bloom.enabled = !flying && Q.scale > 0.65;
+    }
     const prevP = S.prevP === undefined ? S.p : S.prevP;
     S.prevP = S.p;
     S.vel += (Math.min(0.03, (Math.abs(S.p - prevP) / Math.max(dt, 1e-3)) * 0.02) - S.vel) * 0.1;
