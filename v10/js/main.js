@@ -17,7 +17,7 @@ import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { mergeGeometries, mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
 import { Reflector } from 'three/addons/objects/Reflector.js';
-import { Sound } from './sound.js?v=20261105v10e';
+import { Sound } from './sound.js?v=20261105v10f';
 
 const root = document.documentElement;
 const $ = (s, c = document) => c.querySelector(s);
@@ -238,9 +238,9 @@ async function main() {
   if (!renderer.getContext()) { goStatic(); return; }
   // pixel ratio = device cap, scaled down by the adaptive quality (Q) when frames run long and
   // capped while flying into / inside a pearl, where thousands of points fill the screen
-  const Q = { scale: 1, flight: false, ema: 16, last: 0, calm: 0 };
+  const Q = { scale: 1, flight: false, ema: 16, last: 0, calm: 0, n: 0 };
   const dprNow = () => {
-    const base = Math.min(window.devicePixelRatio || 1, 1.5);
+    const base = Math.min(window.devicePixelRatio || 1, isPhone ? 1.5 : 1.75);
     const d = base * Q.scale;
     return Math.max(0.6, Math.round(d * 20) / 20);
   };
@@ -1670,19 +1670,22 @@ async function main() {
     const dt = Math.min(clock.getDelta(), 0.05);
     const time = clock.elapsedTime;
     {
-      // adaptive quality: lower the pixel ratio in steps while frames run long, raise it slowly
-      // when there is headroom (hysteresis, so the drawing buffer is never resized every frame)
+      // adaptive quality: only a real, sustained slowdown lowers the pixel ratio (a 60 Hz screen
+      // runs at ~16.7 ms, so that is the normal case, not a reason to drop), and quality comes
+      // back as soon as frames are steady again. The first seconds (loader, warm-up) are ignored.
       const now = performance.now(), ft = Q.last ? Math.min(now - Q.last, 250) : 16;
       Q.last = now;
-      Q.ema += (ft - Q.ema) * 0.12;
       const flying = !!F.kind && F.v > 0.01;
-      let changed = false;
-      Q.flight = flying; // no resize at the start or end of a flight: that reallocation is itself a hitch
-      if (Q.ema > 24 && Q.scale > 0.5) { Q.scale = Math.max(0.5, Q.scale - 0.15); Q.ema = 16; Q.calm = 0; changed = true; }
-      else if (Q.ema < 13 && Q.scale < 1) { if (++Q.calm > 120) { Q.scale = Math.min(1, Q.scale + 0.1); Q.calm = 0; changed = true; } }
-      else Q.calm = 0;
-      if (changed) applySize();
-      if (bloom) bloom.enabled = !flying && Q.scale > 0.65;
+      Q.flight = flying;
+      if (S.ready && ++Q.n > 90) {
+        Q.ema += (ft - Q.ema) * 0.1;
+        let changed = false;
+        if (Q.ema > 32 && Q.scale > 0.6) { Q.scale = Math.max(0.6, Q.scale - 0.2); Q.ema = 18; Q.calm = 0; changed = true; }
+        else if (Q.ema < 21 && Q.scale < 1 && !flying) { if (++Q.calm > 60) { Q.scale = Math.min(1, Q.scale + 0.2); Q.calm = 0; Q.ema = 17; changed = true; } }
+        else Q.calm = 0;
+        if (changed) applySize();
+      }
+      if (bloom) bloom.enabled = !flying;
     }
     const prevP = S.prevP === undefined ? S.p : S.prevP;
     S.prevP = S.p;
@@ -1979,7 +1982,7 @@ async function main() {
 
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) { running = false; cancelAnimationFrame(raf); }
-    else if (!running) { running = true; clock.getDelta(); raf = requestAnimationFrame(frame); }
+    else if (!running) { running = true; clock.getDelta(); Q.last = 0; Q.n = 0; raf = requestAnimationFrame(frame); }
   });
 
   window.__dorr = {
