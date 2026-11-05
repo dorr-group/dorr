@@ -17,7 +17,7 @@ import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { mergeGeometries, mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
 import { Reflector } from 'three/addons/objects/Reflector.js';
-import { Sound } from './sound.js?v=20261105v10f';
+import { Sound } from './sound.js?v=20261105v10g';
 
 const root = document.documentElement;
 const $ = (s, c = document) => c.querySelector(s);
@@ -242,7 +242,9 @@ async function main() {
   const dprNow = () => {
     const base = Math.min(window.devicePixelRatio || 1, isPhone ? 1.5 : 1.75);
     const d = base * Q.scale;
-    return Math.max(0.6, Math.round(d * 20) / 20);
+    // inside a pearl / on the way in or out the screen is mostly points and lines: render them at
+    // a lighter resolution (one resize as the flight starts, one after it ends)
+    return Math.max(0.6, Math.round((Q.flight ? Math.min(d, Math.max(1, base * 0.7)) : d) * 20) / 20);
   };
   let DPR = dprNow();
   renderer.setPixelRatio(DPR);
@@ -717,7 +719,8 @@ async function main() {
         : `float tw = 0.6 + 0.4 * sin(uTime * (1.5 + aRand * 3.0) + aRand * 40.0);
       vA = g * uAlpha * (0.22 + 0.78 * front) * (tw + scan * 1.6 + uHover * 0.4) * seg * fog * (aNode < -0.5 ? 0.35 : 1.0);
       gl_PointSize = min(uSize * (0.75 + max(aNode, 0.0) * 1.7 + scan * 0.9 + aRand * 0.5) * (0.6 + 0.4 * seg) / max(-mv.z, 0.05), 26.0 * uPix);
-      vA *= smoothstep(0.15, 0.9, -mv.z);`}
+      vA *= smoothstep(0.15, 0.9, -mv.z);
+      if (vA < 0.004) gl_PointSize = 0.0;`}
       gl_Position = projectionMatrix * mv;
     }`;
   const plexusFragPts = /* glsl */`
@@ -1002,7 +1005,9 @@ async function main() {
         vec4 mv = viewMatrix * vec4(p, 1.0);
         float d = -mv.z;
         vA = uA * smoothstep(0.4, 1.8, d) * (1.0 - smoothstep(7.0, 12.0, d)) * (0.35 + 0.65 * position.y);
-        gl_PointSize = uSize * (0.35 + position.z * 0.9) / max(d, 0.1);
+        // near the camera (flying into a pearl) a sprite would cover hundreds of pixels while being
+        // faded to nothing: collapse invisible motes and cap the rest, so they cost no fill-rate
+        gl_PointSize = vA < 0.004 ? 0.0 : min(uSize * (0.35 + position.z * 0.9) / max(d, 0.1), uSize * 1.6);
         gl_Position = projectionMatrix * mv;
       }`,
     fragmentShader: `varying float vA; void main(){ vec2 c = gl_PointCoord - 0.5; float d = length(c); float a = smoothstep(0.5, 0.0, d) * vA; if (a < 0.01) discard; gl_FragColor = vec4(1.0, 0.98, 0.95, a); }`,
@@ -1060,6 +1065,7 @@ async function main() {
       renderer.setPixelRatio(d); composer.setPixelRatio(d);
       for (const [u, base] of pixelSized) u.value = base * d;
     }
+    const sized = force || w !== W || h !== H;
     W = w; H = h;
     renderer.setSize(W, H, false);
     composer.setSize(W, H);
@@ -1067,7 +1073,11 @@ async function main() {
     camera.fov = baseFov = W / H < 0.8 ? 50 : 36;
     camera.updateProjectionMatrix();
     finalPass.uniforms.uRes.value.set(W * DPR, H * DPR);
-    for (const fn of sizeListeners) fn();
+    if (sized) for (const fn of sizeListeners) fn();
+    else { // pixel ratio only (quality / flight): no page re-measure, just the reflection target
+      const rt = typeof water !== 'undefined' && water.getRenderTarget && water.getRenderTarget();
+      if (rt) rt.setSize(Math.round(W * DPR * (isPhone ? 0.35 : 0.5)), Math.round(H * DPR * (isPhone ? 0.35 : 0.5)));
+    }
     return true;
   };
   const onResize = () => applySize();
@@ -1676,7 +1686,7 @@ async function main() {
       const now = performance.now(), ft = Q.last ? Math.min(now - Q.last, 250) : 16;
       Q.last = now;
       const flying = !!F.kind && F.v > 0.01;
-      Q.flight = flying;
+      if (flying !== Q.flight) { Q.flight = flying; applySize(); }
       if (S.ready && ++Q.n > 90) {
         Q.ema += (ft - Q.ema) * 0.1;
         let changed = false;
@@ -1847,6 +1857,7 @@ async function main() {
         pe.P.group.rotation.x = Math.sin(time * 0.12 + i) * 0.22;
         pe.g.position.y = pe.y0 + Math.sin(time * 0.6 + i) * 0.05;
         pe.body.material.uniforms.uA.value = 0.3 * pe.rev * (1 - sstep(0.4, 0.8, focusMe));
+        pe.body.visible = pe.body.material.uniforms.uA.value > 0.002; // a faded body still costs a full-screen fill when the camera is inside
         pe.ring.position.y = U.uScan.value;
         const rr = Math.sqrt(Math.max(0, 1 - U.uScan.value * U.uScan.value)) * 1.01;
         pe.ring.scale.set(rr + 1e-3, 1, rr + 1e-3);
