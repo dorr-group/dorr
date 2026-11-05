@@ -17,7 +17,7 @@ import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { mergeGeometries, mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
 import { Reflector } from 'three/addons/objects/Reflector.js';
-import { Sound } from './sound.js?v=20261105v10b';
+import { Sound } from './sound.js?v=20261105v10c';
 
 const root = document.documentElement;
 const $ = (s, c = document) => c.querySelector(s);
@@ -158,8 +158,6 @@ function openSheet(kind, i = 0) {
     gsap.fromTo(panel.children, { y: 14, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.7, stagger: 0.05, ease: 'power2.out', delay: 0.4 });
   }
   scramble($('.sheet__name', el), kind === 'brand' ? BRANDS[i].name : 'DORR', 0.9);
-  Sound.pearl(kind === 'brand' ? i : -1);
-  Sound.open();
   Sound.duck(true);
   $('[data-close]', el).focus({ preventScroll: true });
   if (SH.hooks.open) SH.hooks.open(kind, i);
@@ -176,7 +174,6 @@ function closeSheet(instant) {
     gsap.killTweensOf(panel);
     gsap.to(panel, { autoAlpha: 0, x: innerWidth < 760 || innerWidth / innerHeight < 0.8 ? 0 : 40, y: innerWidth < 760 || innerWidth / innerHeight < 0.8 ? 40 : 0, duration: 0.5, ease: 'power2.in', onComplete: () => { el.hidden = true; gsap.set(panel, { x: 0, y: 0 }); } });
   }
-  if (instant !== true) Sound.close();
   Sound.duck(false);
   if (SH.hooks.close) SH.hooks.close(kind);
   if (SH.last && SH.last.focus && instant !== true) SH.last.focus({ preventScroll: true });
@@ -184,7 +181,6 @@ function closeSheet(instant) {
 function setBrand(i) {
   SH.idx = (i + 5) % 5;
   fillBrand(SH.idx, true);
-  Sound.pearl(SH.idx);
   const panel = $('.sheet__panel', sheetEls.brand);
   if (anim()) gsap.fromTo($$('.sheet__type, .sheet__fig, .sheet__body', panel), { autoAlpha: 0, y: 10 }, { autoAlpha: 1, y: 0, duration: 0.6, stagger: 0.06, ease: 'power2.out' });
   if (SH.hooks.brand) SH.hooks.brand(SH.idx);
@@ -243,6 +239,7 @@ async function main() {
   const dprNow = () => Math.min(window.devicePixelRatio || 1, isPhone ? 1.5 : 1.75);
   let DPR = dprNow();
   renderer.setPixelRatio(DPR);
+  renderer.debug.checkShaderErrors = false; // no synchronous info-log round-trips when a program links
   const pixelSized = []; // [uniform, base] pairs that scale with the pixel ratio
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -1240,7 +1237,7 @@ async function main() {
   }
   window.scrollTo(0, 0);
   const dossierEl = $('#dossier');
-  const S = { p: 0, intro: 0, vel: 0, flash: 0, dossierVisible: false, mode: 'film', step: 0, busy: false, ready: false, swell: false, inDossier: false };
+  const S = { p: 0, intro: 0, vel: 0, flash: 0, dossierVisible: false, mode: 'film', step: 0, busy: false, ready: false, inDossier: false };
   const track = $('[data-track]');
   const st = ScrollTrigger.create({ trigger: track, start: 'top top', end: 'bottom bottom' });
   ScrollTrigger.create({ trigger: '#dossier', start: 'top bottom', end: 'bottom top', onToggle: (self) => { S.dossierVisible = self.isActive; } });
@@ -1278,7 +1275,6 @@ async function main() {
         if (afterStep) { const f = afterStep; afterStep = null; f(); }
       },
     });
-    Sound.step();
     writeHistory(i, false);
   }
   function stepBy(dir) {
@@ -1296,7 +1292,6 @@ async function main() {
     if (stepTween) { stepTween.kill(); stepTween = null; }
     afterStep = null;
     S.busy = true;
-    Sound.jump();
     gsap.timeline({ onComplete: () => { S.busy = false; } })
       .to(veil, { opacity: 1, duration: reduce ? 0.01 : 0.55, ease: 'sine.inOut' })
       .to(S, { flash: 1, duration: 0.55, ease: 'sine.inOut' }, 0)
@@ -1320,7 +1315,6 @@ async function main() {
     if (S.mode === 'dossier' || S.busy) return;
     S.mode = 'dossier'; S.busy = true;
     syncScroll();
-    Sound.step();
     writeHistory('dossier', false);
     if (lenis) {
       lenis.start();
@@ -1332,7 +1326,6 @@ async function main() {
     S.busy = true;
     S.step = LAST; S.p = STOPS[LAST].p;
     writeHistory(LAST, false);
-    Sound.step();
     const finish = () => { S.mode = 'film'; if (lenis) lenis.stop(); S.busy = false; syncScroll(); };
     if (lenis) lenis.scrollTo(pToY(S.p), { duration: reduce ? 0.01 : 1.8, easing: easeSine, force: true, lock: true, onComplete: finish });
     else { window.scrollTo(0, pToY(S.p)); finish(); }
@@ -1428,7 +1421,6 @@ async function main() {
     $$('.menu__list > li > button', menuEl).forEach((b, k) => b.classList.toggle('is-now', k === cur));
     if (anim()) gsap.fromTo($('.menu__panel', menuEl), { xPercent: 10, autoAlpha: 0 }, { xPercent: 0, autoAlpha: 1, duration: 0.7, ease: 'power3.out' });
     $('[data-menu-close]', menuEl).focus({ preventScroll: true });
-    Sound.tick();
   }
   function closeMenu(restore) {
     if (!menuOpen) return;
@@ -1508,6 +1500,7 @@ async function main() {
     }
   }
   function showInside() {
+    mainEl.setAttribute('aria-hidden', 'true'); // modal for assistive tech; the focus trap keeps keyboard focus inside (inert on <main> re-styles the whole page)
     inEl.classList.remove('is-out');
     inEl.classList.add('is-in');
     inUI.back.focus({ preventScroll: true });
@@ -1519,13 +1512,11 @@ async function main() {
     if (kind === 'brand' && S.step !== brandStep(i)) { if (!S.busy) { afterStep = () => enterPearl('brand', i); goStep(brandStep(i)); } return; }
     if (kind === 'dorr' && S.step !== 3) { if (!S.busy) { afterStep = () => enterPearl('dorr', 0); goStep(3); } return; }
     if (S.busy) return;
+    performance.mark('dorr-enter');
     IN.on = true; IN.busy = true; IN.last = document.activeElement;
     F.kind = kind; F.idx = i;
     fillInside(kind, i);
     inEl.hidden = false; inEl.classList.remove('is-in', 'is-out');
-    mainEl.inert = true;
-    Sound.pearl(kind === 'brand' ? i : -1);
-    Sound.enter();
     Sound.duck(true);
     try { history.pushState({ inside: true, step: S.step }, '', location.hash); IN.pushed = true; } catch (e) { IN.pushed = false; }
     gsap.killTweensOf(F);
@@ -1536,9 +1527,9 @@ async function main() {
     if (!IN.on) return;
     if (IN.busy && !fromPop) return;
     if (IN.pushed && fromPop !== true) { IN.pushed = false; try { history.back(); return; } catch (e) { /* fall through */ } }
+    performance.mark('dorr-exit');
     IN.busy = true;
     inEl.classList.remove('is-in'); inEl.classList.add('is-out');
-    Sound.exit();
     Sound.duck(false);
     gsap.killTweensOf(F);
     gsap.to(F, {
@@ -1546,7 +1537,7 @@ async function main() {
       onComplete: () => {
         F.kind = null; IN.on = false; IN.busy = false;
         inEl.hidden = true; inEl.classList.remove('is-out');
-        mainEl.inert = false;
+        mainEl.removeAttribute('aria-hidden');
         if (IN.last && IN.last.focus && document.contains(IN.last)) IN.last.focus({ preventScroll: true });
         if (exitWaiter) { const fn = exitWaiter; exitWaiter = null; fn(); }
       },
@@ -1556,7 +1547,7 @@ async function main() {
     gsap.killTweensOf(F);
     F.v = 0; F.open = 0; F.kind = null; IN.on = false; IN.busy = false; IN.pushed = false;
     inEl.hidden = true; inEl.classList.remove('is-in', 'is-out');
-    mainEl.inert = false;
+    mainEl.removeAttribute('aria-hidden');
     Sound.duck(false);
   }
   // pearl to pearl without leaving the portfolio: out a little, travel, in again
@@ -1566,7 +1557,6 @@ async function main() {
     const next = target !== undefined ? target : (F.idx + dir + 5) % 5;
     IN.busy = true;
     inEl.classList.remove('is-in'); inEl.classList.add('is-out');
-    Sound.exit();
     const d = reduce ? 0.01 : 1;
     gsap.timeline()
       .to(F, { v: 0, duration: 1.6 * d, ease: 'power2.inOut' }, 0.25 * d)
@@ -1578,7 +1568,6 @@ async function main() {
         try { history.replaceState({ inside: true, step: S.step }, '', `#s${S.step}`); } catch (e) { /* ignore */ }
       })
       .to(S, { p: STOPS[brandStep(next)].p, duration: 1.8 * d, ease: 'sine.inOut' })
-      .add(() => { Sound.pearl(next); Sound.enter(); })
       .to(F, { v: 1, duration: 2.0 * d, ease: 'power2.inOut', onComplete: () => { IN.busy = false; syncScroll(); showInside(); } });
   }
   const afterExit = (fn) => { exitWaiter = fn; };
@@ -1634,10 +1623,44 @@ async function main() {
     place(t, x, y, o * (t.fade < 0.02 ? 0 : t.fade));
   };
 
+  // Warm-up, while the loader still covers the page: link every program variant (each stage on its
+  // own, so the light count matches what the frame will use) and draw every state once through the
+  // whole post chain, including the inside of each pearl and of DORR. The GPU then has all its
+  // pipelines, buffers and textures before the first click, so entering or leaving a pearl never
+  // compiles or uploads anything.
+  function prewarm() {
+    const only = (a, b, c, d, inner) => { stageA.visible = a; stageB.visible = b; stageC.visible = c; stageD.visible = d; innerDorr.group.visible = inner; };
+    const fov0 = camera.fov;
+    const shot = (setup) => {
+      setup();
+      camera.updateProjectionMatrix(); scene.updateMatrixWorld(); camera.updateMatrixWorld();
+      try { composer.render(); } catch (e) { /* warm-up only */ }
+    };
+    try {
+      for (const v of [[false, true, false, false, false], [false, false, true, false, false], [false, false, false, true, false], [false, false, false, false, true], [true, false, false, false, false]]) { only(...v); renderer.compile(scene, camera); }
+    } catch (e) { /* warm-up only */ }
+    for (const pe of pearls) {
+      shot(() => { only(false, true, false, false, false); for (const q of pearls) q.g.visible = true; pe.P.U.uReveal.value = 1.15; camera.fov = baseFov; camera.position.set(pe.g.position.x - 0.6, 0.6, 7.6); camera.lookAt(pe.g.position); });
+      shot(() => { for (const q of pearls) q.g.visible = q === pe; pe.g.scale.setScalar(3.7); pe.P.U.uInside.value = 1; camera.fov = 64; camera.position.copy(pe.g.position); camera.lookAt(pe.g.position.x, pe.g.position.y, pe.g.position.z - 1.2); scene.fog.density = 0.016; });
+      pe.g.scale.setScalar(1); pe.P.U.uInside.value = 0; pe.P.U.uReveal.value = 0;
+    }
+    shot(() => { only(false, false, false, false, true); innerDorr.U.uReveal.value = 1.15; camera.fov = 64; camera.position.copy(pearlWorld); camera.lookAt(pearlWorld.x, pearlWorld.y, pearlWorld.z - 1.2); });
+    shot(() => { only(true, false, false, false, false); camera.fov = baseFov; camera.position.set(pearlWorld.x, pearlWorld.y + 1.2, pearlWorld.z + 2.7); camera.lookAt(pearlWorld); });
+    shot(() => { only(false, false, true, false, false); thread.U.uReveal.value = 1.15; camera.position.set(0.9, 0.2, 8.2); camera.lookAt(0, -0.9, 0); });
+    shot(() => { only(false, false, false, true, false); camera.position.set(4, 2.6, 10.5); camera.lookAt(0, 0, 0); });
+    innerDorr.U.uReveal.value = 0; thread.U.uReveal.value = 0; innerDorr.group.visible = false;
+    camera.fov = fov0; camera.updateProjectionMatrix();
+  }
+
+  let lastIW = 0, lastIH = 0, lastDPR = 0;
   const frame = () => {
     raf = requestAnimationFrame(frame);
     if (!running) return;
-    if (applySize() || ++avoidAge > 20) refreshAvoid();
+    if (window.innerWidth !== lastIW || window.innerHeight !== lastIH || (window.devicePixelRatio || 1) !== lastDPR) {
+      lastIW = window.innerWidth; lastIH = window.innerHeight; lastDPR = window.devicePixelRatio || 1;
+      if (applySize()) refreshAvoid();
+    }
+    if (!IN.on && ++avoidAge > 30) refreshAvoid();
     const dt = Math.min(clock.getDelta(), 0.05);
     const time = clock.elapsedTime;
     const prevP = S.prevP === undefined ? S.p : S.prevP;
@@ -1655,6 +1678,11 @@ async function main() {
     const inDorr = F.kind === 'dorr' && F.v > 0.52;
     stageA.visible = stage === 'A' && !inDorr; stageB.visible = stage === 'B'; stageC.visible = stage === 'C'; stageD.visible = stage === 'D';
     innerDorr.group.visible = inDorr;
+    // lighter GPU frames while flying: shadows are only re-rendered in the shell and vision scenes
+    // and never mid-flight (the last map is reused); the water reflection pauses while the
+    // pearl's burst of light hides it on the way into DORR
+    renderer.shadowMap.autoUpdate = (stage === 'A' || stage === 'D') && !(F.kind && F.v > 0.02);
+    water.visible = !(F.kind === 'dorr' && F.v > 0.42);
     const tr = Math.max(trans(p, 0.365, 0.024), trans(p, 0.66, 0.022), trans(p, 0.85, 0.022));
     if (p < 0.365) applyLook(LOOK.A, LOOK.B, sstep(0.35, 0.365, p));
     else if (p < 0.66) applyLook(LOOK.B, LOOK.C, sstep(0.645, 0.66, p));
@@ -1740,8 +1768,6 @@ async function main() {
     // ---------------------------------------------------- A · the shell in the water
     if (stage === 'A') {
       const open = Math.max(inOut(seg(p, 0.13, 0.255)), F.open);
-      if (open > 0.06 && !S.swell) { S.swell = true; Sound.shell(); }
-      else if (open < 0.02) S.swell = false;
       openAmt = open;
       topValve.rotation.x = -open * 1.02 - Math.sin(time * 0.8) * 0.006 * open;
       shell.position.y = SHELL_Y + Math.sin(time * 0.55) * 0.015;
@@ -1876,9 +1902,7 @@ async function main() {
     // hover (mouse only)
     if (ptr.moved && !SH.kind) {
       ptr.moved = false;
-      const was = hover;
       hover = coarse ? null : pick(ptr.x, ptr.y);
-      if (hover !== was && hover !== null && hover !== 'shell') Sound.tick();
       root.classList.toggle('is-pointer', hover !== null);
     }
 
@@ -1980,6 +2004,7 @@ async function main() {
   samplePath(PATH_A, 0, camPos, camLook);
   camera.position.copy(camPos); camera.lookAt(camLook);
   try { renderer.compile(scene, camera); } catch (e) { /* compile is a warm-up only */ }
+  prewarm();
   frame();
   await new Promise((r) => gsap.to(v, { n: 100, duration: 1.2, ease: 'power2.inOut', onUpdate: paint, onComplete: r }));
   await askSound();

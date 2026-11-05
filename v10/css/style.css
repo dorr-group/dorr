@@ -322,7 +322,9 @@ html.static .hud__menu { display: none; }
 .menu__sub button { display: inline; width: auto; min-height: 36px; font-size: 0.72rem; letter-spacing: 0.12em; color: var(--ink-2); }
 
 .inside { position: fixed; inset: 0; z-index: 38; display: grid; place-items: stretch; pointer-events: none; background: radial-gradient(ellipse at 50% 50%, rgba(40, 33, 26, 0) 35%, rgba(40, 33, 26, 0.28)); }
-.inside[hidden] { display: none; }
+.inside[hidden] { display: grid; visibility: hidden; pointer-events: none; }
+.inside { will-change: opacity; contain: strict; } /* kept laid out and rasterised, so showing it costs nothing */
+.inside .inside__head, .inside .inside__text, .inside .inside__nav { will-change: opacity, transform; }
 .inside__frame { pointer-events: auto; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: 1rem; height: 100%; min-height: 0; overflow: hidden; padding: calc(var(--gt) + 64px) calc(var(--gr) + 34px) calc(var(--gb) + 18px) var(--gl); }
 .inside__head { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
 .inside__head .kicker { color: var(--white); }
@@ -330,7 +332,7 @@ html.static .hud__menu { display: none; }
 .inside__back { display: inline-flex; align-items: center; gap: 0.6rem; min-height: 42px; padding: 0 1rem; font-family: var(--f-m); font-size: 0.64rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink); background: var(--white); transition: background-color 0.3s, color 0.3s; }
 .inside__back:hover { background: var(--ink); color: var(--white); }
 .inside__body { display: grid; grid-template-columns: minmax(0, 620px); grid-template-rows: minmax(0, 1fr); justify-content: center; align-items: center; min-height: 0; overflow: hidden; }
-.inside__text { display: grid; grid-auto-rows: max-content; min-height: 0; gap: 1rem; padding: 1.6rem 1.7rem; background: rgba(244, 239, 232, 0.72); -webkit-backdrop-filter: blur(14px) saturate(1.1); backdrop-filter: blur(14px) saturate(1.1); border-top: 1px solid var(--white); max-height: 100%; overflow-y: auto; overscroll-behavior: contain; }
+.inside__text { display: grid; grid-auto-rows: max-content; min-height: 0; gap: 1rem; padding: 1.6rem 1.7rem; background: rgba(240, 235, 228, 0.88); contain: layout paint; border-top: 1px solid var(--white); max-height: 100%; overflow-y: auto; overscroll-behavior: contain; }
 .inside__name { font-stretch: 125%; font-weight: 300; font-size: clamp(2.4rem, 5vw, 4.6rem); line-height: 0.92; letter-spacing: 0.05em; overflow-wrap: anywhere; }
 .inside__type { font-family: var(--f-m); font-size: 0.7rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-2); }
 .inside__type::before { content: "— "; }
@@ -367,7 +369,7 @@ html.is-inside .rail, html.is-inside .hud--bottom { opacity: 0; pointer-events: 
 .rail, .hud--bottom { transition: opacity 0.6s; }
 
 /* text-only interior: a centred plate with a soft halo of light behind it */
-.inside__text { position: relative; padding: clamp(1.6rem, 3vw, 2.6rem) clamp(1.6rem, 3.2vw, 2.8rem); text-align: left; box-shadow: 0 40px 120px rgba(30, 24, 18, 0.25); }
+.inside__text { position: relative; padding: clamp(1.6rem, 3vw, 2.6rem) clamp(1.6rem, 3.2vw, 2.8rem); text-align: left; box-shadow: 0 24px 60px rgba(30, 24, 18, 0.22); }
 .inside__name { font-size: clamp(2.8rem, 6vw, 5.6rem); }
 @media (max-width: 760px), (max-aspect-ratio: 4/5) { .inside__name { font-size: 2.5rem; } .inside__text { padding: 1.2rem 1.15rem; } }
 
@@ -408,3 +410,6 @@ html.is-inside .rail, html.is-inside .hud--bottom { opacity: 0; pointer-events: 
 }
 html.in-dossier .tags { opacity: 0; transition: opacity 0.4s; }
 @media (min-width: 1600px) { html { font-size: clamp(16px, 0.55vw + 8px, 22px); } }
+
+/* the long dossier is not rendered while it is off-screen (keeps every film transition light) */
+.dossier { content-visibility: auto; contain-intrinsic-size: auto 2400px; }
