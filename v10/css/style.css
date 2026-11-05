@@ -203,7 +203,7 @@ html.static .brands li p { display: block; font-size: 0.92rem; color: var(--ink-
 html.static .brands button { color: var(--ink); grid-template-columns: 2.2rem 1fr; }
 html.static .brands em { display: block; grid-column: 2; font-style: normal; font-family: var(--f-m); font-size: 0.6rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
 html.static .brands__n { color: var(--ink); }
-html.static .hud__logo span { color: var(--ink); }
+html.static .hud__logo { color: var(--ink); }
 html.static .hud__link { border-color: var(--ink); color: var(--ink); }
 html.static .panel__mega { color: var(--ink); }
 html.static .sheet__panel { width: min(560px, 100vw); }
@@ -271,9 +271,9 @@ html.is-pointer, html.is-pointer body { cursor: pointer; }
 .tag__type { display: block; margin-top: 0.5rem; }
 
 /* over the dossier the HUD turns to ink and the rail steps aside */
-.rail, .hud--bottom, .hud__logo span, .hud__link { transition: opacity 0.5s, color 0.5s, border-color 0.5s; }
+.rail, .hud--bottom, .hud__logo, .hud__link { transition: opacity 0.5s, color 0.5s, border-color 0.5s; }
 html.in-dossier .rail, html.in-dossier .hud--bottom { opacity: 0; }
-html.in-dossier .hud__logo span { color: var(--ink); }
+html.in-dossier .hud__logo { color: var(--ink); }
 html.in-dossier .hud__link { color: var(--ink); border-color: var(--ink); }
 html.static .hud--top { position: absolute; }
 
@@ -413,3 +413,17 @@ html.in-dossier .tags { opacity: 0; transition: opacity 0.4s; }
 
 /* the long dossier is not rendered while it is off-screen (keeps every film transition light) */
 .dossier { content-visibility: auto; contain-intrinsic-size: auto 2400px; }
+
+/* client logo (vector, from the brand file): full lock-up in the loader and the dossier, the
+   DORR mark with its pearl dot in the header */
+.logo { display: block; height: auto; }
+.boot__mark { letter-spacing: 0; margin: 0; }
+.boot__mark .logo { width: clamp(220px, 34vw, 440px); color: var(--white); }
+.hud__logo { display: block; color: var(--white); line-height: 0; }
+.hud__logo .logo { height: clamp(20px, 2vw, 28px); width: auto; }
+.dossier__logo { max-width: 1400px; margin: clamp(60px, 10vh, 110px) auto 0; color: var(--ink); }
+.dossier__logo .logo { width: clamp(200px, 22vw, 320px); }
+@media (max-width: 700px) { .hud__logo .logo { height: 18px; } }
+/* over the dossier the header sits on its own paper band, so lines and text never run through the logo */
+.hud--top { transition: background-color 0.5s; }
+html.in-dossier .hud--top { background: var(--paper); padding-bottom: 12px; box-shadow: 0 1px 0 var(--line); }
